@@ -30,15 +30,15 @@ public class GameManager : MonoBehaviour
 
     private Vector3[] startPositions = new Vector3[]
     {
-        // new Vector3(-29f, 0.2f, -29f),
-        // new Vector3(29f, 0.2f, -29f),
-        // new Vector3(29f, 0.2f, 29),
-        // new Vector3(-29f, 0.2f, 29f)
+        new Vector3(-29f, 0.2f, -29f),
+        new Vector3(29f, 0.2f, -29f),
+        new Vector3(29f, 0.2f, 29),
+        new Vector3(-29f, 0.2f, 29f)
 
-        new Vector3(-19f, 0f, -19f),
-        new Vector3(19f, 0f, -19f),
-        new Vector3(19f, 0f, 19f),
-        new Vector3(-19f, 0f, 19f)
+        // new Vector3(-19f, 0f, -19f),
+        // new Vector3(19f, 0f, -19f),
+        // new Vector3(19f, 0f, 19f),
+        // new Vector3(-19f, 0f, 19f)
     };    
 
     public int currenPlayerIndex = 0;
