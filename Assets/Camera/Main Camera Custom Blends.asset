@@ -13,7 +13,51 @@ MonoBehaviour:
   m_Name: Main Camera Custom Blends
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineBlenderSettings
   CustomBlends:
+  - From: CM_Dice
+    To: '**ANY CAMERA**'
+    Blend:
+      Style: 0
+      Time: 3
+      CustomCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 4
   - From: '**ANY CAMERA**'
+    To: CM_Dice
+    Blend:
+      Style: 0
+      Time: 3
+      CustomCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 4
+  - From: CM_ThirdPerson
+    To: CM_TopDown
+    Blend:
+      Style: 0
+      Time: 3
+      CustomCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 4
+  - From: CM_ThirdPerson
+    To: CM_FreeRoam
+    Blend:
+      Style: 0
+      Time: 3
+      CustomCurve:
+        serializedVersion: 2
+        m_Curve: []
+        m_PreInfinity: 0
+        m_PostInfinity: 0
+        m_RotationOrder: 4
+  - From: CM_FreeRoam
     To: CM_ThirdPerson
     Blend:
       Style: 0
@@ -23,26 +67,15 @@ MonoBehaviour:
         m_Curve: []
         m_PreInfinity: 0
         m_PostInfinity: 0
-        m_RotationOrder: 0
-  - From: CM_ThirdPerson
-    To: '**ANY CAMERA**'
+        m_RotationOrder: 4
+  - From: CM_TopDown
+    To: CM_ThirdPerson
     Blend:
       Style: 0
-      Time: 1
+      Time: 3
       CustomCurve:
         serializedVersion: 2
         m_Curve: []
         m_PreInfinity: 0
         m_PostInfinity: 0
-        m_RotationOrder: 0
-  - From: CM_FaceToFace
-    To: CM_TopDown
-    Blend:
-      Style: 0
-      Time: 2
-      CustomCurve:
-        serializedVersion: 2
-        m_Curve: []
-        m_PreInfinity: 0
-        m_PostInfinity: 0
-        m_RotationOrder: 0
+        m_RotationOrder: 4

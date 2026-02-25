@@ -159,3 +159,8 @@ crashlytics-build.properties
 .DS_Store*
 Thumbs.db
 Desktop.ini
+
+**/Assets/Scenes/Classic
+**/Assets/Scenes/Classic/*.exr
+**/Assets/Scenes/LaberynthRandom
+**/Assets/Scenes/LaberynthRandom/*.exr

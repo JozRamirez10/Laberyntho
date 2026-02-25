@@ -10,35 +10,24 @@ public class GhostMovement : MonoBehaviour
 
     void Awake()
     {
-        // Obtenemos las referencias una sola vez al principio
         controller = GetComponent<CharacterController>();
-        if (Camera.main != null)
-        {
-            mainCameraTransform = Camera.main.transform;
-        }
-        else
-        {
-            Debug.LogError("GhostMovement: No se encontró la cámara principal (Camera.main).");
-        }
+        if (Camera.main != null) mainCameraTransform = Camera.main.transform;
+        else return;
     }
 
-    // ESTA ES LA CLAVE: Se ejecuta cada vez que el script se activa (Tecla N)
     void OnEnable()
     {
         if (controller != null)
         {
-            // Truco sucio pero efectivo de Unity:
-            // Desactivar y reactivar el CharacterController fuerza un reset de sus físicas.
-            // Esto evita que se quede "atascado" después de ser teletransportado.
             controller.enabled = false;
             controller.enabled = true;
-            Debug.Log("GhostMovement: CharacterController reiniciado físicamente.");
         }
     }
 
     void Update()
     {
-        // Si algo falló en el Awake, no intentamos movernos para evitar errores
+        if(UIPauseManager.Instace.isPaused) return;
+
         if (mainCameraTransform == null || controller == null) return;
 
         float h = Input.GetAxis("Horizontal");

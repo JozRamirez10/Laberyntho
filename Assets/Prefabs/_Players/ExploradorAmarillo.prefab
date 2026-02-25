@@ -206,10 +206,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlowPulserIcon
   baseColor: {r: 1, g: 0.93333334, b: 0, a: 1}
-  pulseSpeed: 4
-  minIntensity: 0
-  maxIntensity: 4
   colorPropertyName: _EmissionColor
+  isPulsingPropertyName: _isPulsing
 --- !u!1 &7619653260548463346
 GameObject:
   m_ObjectHideFlags: 0
@@ -316,6 +314,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e70699731d97d4428885f546410f4898, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4829173621151884495}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e70699731d97d4428885f546410f4898, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4757221081246533773}
   m_SourcePrefab: {fileID: 100100000, guid: e70699731d97d4428885f546410f4898, type: 3}
 --- !u!4 &5910446467493305084 stripped
 Transform:
@@ -341,14 +342,36 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ExplorerPlayer
   characterName: Yellow
   playerColor: {r: 0.81960785, g: 0.7882353, b: 0.08627451, a: 1}
+  IsCPU: 1
   iconGlowObject: {fileID: 6641797782675860773}
   groundLayer:
     serializedVersion: 2
     m_Bits: 128
   rotationSpeed: 360
-  keysCollected: 2
+  keysCollected: 0
   doorLayer:
     serializedVersion: 2
     m_Bits: 8192
   deathParticlesPrefab: {fileID: 7001846174036246065, guid: 0b7faa2a245654ef2bfd41a3aa3bbfab, type: 3}
   respawnParticlesPrefab: {fileID: 6946183168694169477, guid: 5330e1246739249098bf6ec51aa8c3bf, type: 3}
+--- !u!114 &4757221081246533773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6435027126656090182}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bf94f27651c449c6bacd21da1adb626, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GridOccupantWallShort
+  baseSize: {x: 1, y: 1}
+  isMovable: 0
+  isWinZone: 0
+  meshRenderer: {fileID: 0}
+  validMaterial: {fileID: 0}
+  invalidMaterial: {fileID: 0}
+  selectablePropertyName: _IsSelectable
+  dissolvePropertyName: _DissolveAmount
+  growthDirection: {x: 0, y: 0}
