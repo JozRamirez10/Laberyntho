@@ -72,17 +72,75 @@ public class ScreenResolution : MonoBehaviour
         resolutionDropdown.RefreshShownValue();
     }
 
+    public void LoadResolution()
+    {
+        // 1. Verificamos si el jugador ya había guardado una resolución antes
+        if (PlayerPrefs.HasKey("SavedResWidth") && PlayerPrefs.HasKey("SavedResHeight"))
+        {
+            int savedWidth = PlayerPrefs.GetInt("SavedResWidth");
+            int savedHeight = PlayerPrefs.GetInt("SavedResHeight");
+
+            // 2. Medida de seguridad: ¿El monitor actual soporta esa resolución guardada?
+            // (Útil si el jugador cambió de monitor desde la última vez que jugó)
+            if (IsResolutionSupported(savedWidth, savedHeight))
+            {
+                gameSettingsSO.resolutionWidth = savedWidth;
+                gameSettingsSO.resolutionHeight = savedHeight;
+            }
+            else
+            {
+                // Si no es soportada, usamos la resolución nativa de su pantalla actual
+                SetNativeResolution();
+            }
+        }
+        else
+        {
+            // 3. ES LA PRIMERA VEZ QUE JUEGA: Usamos la resolución nativa de su monitor
+            SetNativeResolution();
+        }
+
+        // 4. Aplicamos la resolución segura
+        Screen.SetResolution(gameSettingsSO.resolutionWidth, gameSettingsSO.resolutionHeight, Screen.fullScreen);
+    }
+
     public void SetResolution(int resolutionIndex)
     {
         Resolution selectedResolution = resolutions[resolutionIndex];
         Screen.SetResolution(selectedResolution.width, selectedResolution.height, Screen.fullScreen);
         
+        // Actualizamos el ScriptableObject para uso en tiempo de ejecución
         gameSettingsSO.resolutionWidth = selectedResolution.width;
         gameSettingsSO.resolutionHeight = selectedResolution.height;
+
+        // Guardamos la decisión del jugador en la memoria de la PC
+        PlayerPrefs.SetInt("SavedResWidth", selectedResolution.width);
+        PlayerPrefs.SetInt("SavedResHeight", selectedResolution.height);
+        PlayerPrefs.Save();
     }
 
-    public void LoadResolution()
+    // --- MÉTODOS AUXILIARES DE SEGURIDAD ---
+
+    private void SetNativeResolution()
     {
-        Screen.SetResolution(gameSettingsSO.resolutionWidth, gameSettingsSO.resolutionHeight, Screen.fullScreen);
+        // Screen.currentResolution obtiene la resolución real del monitor de Windows
+        Resolution nativeRes = Screen.currentResolution;
+        gameSettingsSO.resolutionWidth = nativeRes.width;
+        gameSettingsSO.resolutionHeight = nativeRes.height;
+
+        // La guardamos para el futuro
+        PlayerPrefs.SetInt("SavedResWidth", nativeRes.width);
+        PlayerPrefs.SetInt("SavedResHeight", nativeRes.height);
+        PlayerPrefs.Save();
+    }
+
+    private bool IsResolutionSupported(int width, int height)
+    {
+        // Comprueba si la resolución que intentamos poner existe en la lista de resoluciones del monitor
+        foreach (Resolution res in Screen.resolutions)
+        {
+            if (res.width == width && res.height == height)
+                return true;
+        }
+        return false;
     }
 }

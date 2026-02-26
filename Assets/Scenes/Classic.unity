@@ -3452,10 +3452,6 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   ghostMaterial: {fileID: 2100000, guid: 717d5141f84dc418699a379969750251, type: 2}
-  pulseSpeed: 7
-  minIntensity: 1
-  maxIntensity: 1.75
-  pulseColor: {r: 1, g: 0.8745098, b: 0, a: 0.5019608}
 --- !u!1 &198527650
 GameObject:
   m_ObjectHideFlags: 0
@@ -7838,7 +7834,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &468720105
 RectTransform:
   m_ObjectHideFlags: 0
@@ -14581,9 +14577,9 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.01
-  far clip plane: 150
-  field of view: 30
-  orthographic: 0
+  far clip plane: 100
+  field of view: 58
+  orthographic: 1
   orthographic size: 32
   m_Depth: -1
   m_CullingMask:
@@ -14609,7 +14605,7 @@ Transform:
   m_GameObject: {fileID: 961739749}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 125, z: 0}
+  m_LocalPosition: {x: 0, y: 5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

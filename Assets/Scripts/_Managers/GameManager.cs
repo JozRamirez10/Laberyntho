@@ -115,10 +115,10 @@ public class GameManager : MonoBehaviour
         currentState = GameState.Intro;
         Setup();
 
-        StartCoroutine(StartGameWithDelay());
+        // StartCoroutine(StartGameWithDelay());
 
-        // if(introDirector != null) introDirector.Play();
-        // else StartGameFromTimelineSignal();
+        if(introDirector != null) introDirector.Play();
+        else StartGameFromTimelineSignal();
     }
 
     private IEnumerator StartGameWithDelay()
