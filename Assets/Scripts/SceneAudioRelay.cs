@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Accede al audio sin acceder directamente al AudioManager (debug)
 public class SceneAudioRelay : MonoBehaviour
 {
     public void PlayConfirm()

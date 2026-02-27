@@ -2,26 +2,20 @@ using UnityEngine;
 using System.Collections.Generic;
 using TMPro;
 
+// Controla la resolución de la pantalla
 public class ScreenResolution : MonoBehaviour
 {
+    public static ScreenResolution Instance;
+
     public TMP_Dropdown resolutionDropdown;
     private List<Resolution> resolutions;
 
     public GameSettingsSO gameSettingsSO;
 
-    public static ScreenResolution Instance;
-
     void Awake()
     {
-        if(Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
+        if(Instance == null) Instance = this;
+        else { Destroy(gameObject); return; }
     }
 
     void Start()
@@ -29,6 +23,7 @@ public class ScreenResolution : MonoBehaviour
         SetupResolutionDropdown();
     }
 
+    // Configura las resoluciones diposibles para la pantalla actual
     private void SetupResolutionDropdown()
     {
         Resolution[] allResolutions = Screen.resolutions;
@@ -72,34 +67,27 @@ public class ScreenResolution : MonoBehaviour
         resolutionDropdown.RefreshShownValue();
     }
 
+    // Carga la última resolución seleccionada
     public void LoadResolution()
     {
-        // 1. Verificamos si el jugador ya había guardado una resolución antes
+        // Valida si el jugador ya había guardado una resolución
         if (PlayerPrefs.HasKey("SavedResWidth") && PlayerPrefs.HasKey("SavedResHeight"))
         {
             int savedWidth = PlayerPrefs.GetInt("SavedResWidth");
             int savedHeight = PlayerPrefs.GetInt("SavedResHeight");
 
-            // 2. Medida de seguridad: ¿El monitor actual soporta esa resolución guardada?
-            // (Útil si el jugador cambió de monitor desde la última vez que jugó)
+            // Valida si el monitor actual soporta la resolución guardada
+            // Si el jugador llega a cambiar de monitor
             if (IsResolutionSupported(savedWidth, savedHeight))
             {
                 gameSettingsSO.resolutionWidth = savedWidth;
                 gameSettingsSO.resolutionHeight = savedHeight;
             }
-            else
-            {
-                // Si no es soportada, usamos la resolución nativa de su pantalla actual
-                SetNativeResolution();
-            }
-        }
-        else
-        {
-            // 3. ES LA PRIMERA VEZ QUE JUEGA: Usamos la resolución nativa de su monitor
-            SetNativeResolution();
-        }
-
-        // 4. Aplicamos la resolución segura
+            else SetNativeResolution();  // Si no es soportada, usamos la resolución nativa de su pantalla actual
+            
+        } else SetNativeResolution(); // Si es la primera vez que juega, coloca la resolución nativa
+        
+        // Aplicamos la resolución
         Screen.SetResolution(gameSettingsSO.resolutionWidth, gameSettingsSO.resolutionHeight, Screen.fullScreen);
     }
 
@@ -118,7 +106,6 @@ public class ScreenResolution : MonoBehaviour
         PlayerPrefs.Save();
     }
 
-    // --- MÉTODOS AUXILIARES DE SEGURIDAD ---
 
     private void SetNativeResolution()
     {
@@ -133,9 +120,9 @@ public class ScreenResolution : MonoBehaviour
         PlayerPrefs.Save();
     }
 
+    // Comprueba si la resolución que intentamos poner existe en la lista de resoluciones del monitor
     private bool IsResolutionSupported(int width, int height)
     {
-        // Comprueba si la resolución que intentamos poner existe en la lista de resoluciones del monitor
         foreach (Resolution res in Screen.resolutions)
         {
             if (res.width == width && res.height == height)

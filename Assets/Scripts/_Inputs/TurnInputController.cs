@@ -68,16 +68,13 @@ public class TurnInputController : MonoBehaviour
         this.currentPhantomPos = startPosFixedY;
         this.initialPlanningPos = startPosFixedY;
 
-        if (isMoninotaurTurn)
-        {
-            this.isFirstMinotaurStep = IsInWinningZone(this.initialPlanningPos);
-        }
-        else
-        {
-            this.isFirstMinotaurStep = false;
-        }
+        // Si es el turno del minotauro y es su primer movimiento, debe realizar un salto del centro del tablero
+        // al grid del tablero
+        if (isMoninotaurTurn) this.isFirstMinotaurStep = IsInWinningZone(this.initialPlanningPos);
+        else this.isFirstMinotaurStep = false;
 
-        ClearPhantoms();
+        // Elimina los fantasmas de movimiento que pudieran existir
+        ClearPhantoms(); 
         this.pathPositions.Clear();
 
         isPlanning = true;
@@ -101,20 +98,24 @@ public class TurnInputController : MonoBehaviour
 
         if(stepsRemaining > 0 || pathPositions.Count > 0)
         {
+            // Moverse usando flechas
             if(Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) TryAddStep(GetCameraRelativeDirection(Vector3.forward));
             if(Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) TryAddStep(GetCameraRelativeDirection(Vector3.left));
             if(Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) TryAddStep(GetCameraRelativeDirection(Vector3.right));
 
+            // Retroceder
             if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
             {
                 if(cameraManager != null && cameraManager.IsMapModeActive) TryAddStep(GetCameraRelativeDirection(Vector3.back));
-                else UndoLastStep();
+                else UndoLastStep(); // Deshace el último movimiento
             }
         }     
 
+        // Confirmar movimiento
         if(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) ConfirmMovement();
     }
 
+    // La cámara se mueve relativo al frente del jugador
     private Vector3 GetCameraRelativeDirection(Vector3 direction)
     {
         if(cameraManager != null && cameraManager.IsMapModeActive) return direction;
@@ -137,14 +138,12 @@ public class TurnInputController : MonoBehaviour
         {
             snappedDirection = relativeDirection.x > 0 ? Vector3.right : Vector3.left;
         }
-        else 
-        {
-            snappedDirection = relativeDirection.z > 0 ? Vector3.forward : Vector3.back;
-        }
+        else snappedDirection = relativeDirection.z > 0 ? Vector3.forward : Vector3.back;
 
         return snappedDirection;
     }
 
+    // Valida que la posición este en la zona ganadora (el centro del tablero)
     private bool IsInWinningZone(Vector3 position)
     {
         float snappedX = Mathf.Floor(position.x / gridSize) * gridSize + (gridSize / 2f);
@@ -157,16 +156,19 @@ public class TurnInputController : MonoBehaviour
         return xIsCentral && zIsCentral;
     }
 
+    // Valida que la posición no esta ocupada
     private Player GetOccupantAtPosition(Vector3 position)
     {
         if(GameManager.Instance == null) return null;
 
+        // Valida iterando en la posición de los jugadores
         foreach(var p in GameManager.Instance.players)
         {
             if(p == null || p == currentPlayer) continue;
             if(Vector3.Distance(GetTileCenterFlat(p.transform.position), GetTileCenterFlat(position)) < 0.1f) return p;
         }
 
+        // Valida con la posición del Minotauro
         if(GameManager.Instance.minotaurInstance != null && GameManager.Instance.minotaurInstance != currentPlayer)
         {
             if(Vector3.Distance(GetTileCenterFlat(GameManager.Instance.minotaurInstance.transform.position), GetTileCenterFlat(position)) < 0.1f)
@@ -177,6 +179,7 @@ public class TurnInputController : MonoBehaviour
         return null;
     }
 
+    // Considera todas las direcciones en que se pueda mover el jugador
     private void TryAddStep(Vector3 direction)
     {
         float currentStepDistance = gridSize;
@@ -184,14 +187,17 @@ public class TurnInputController : MonoBehaviour
 
         Vector3 calculatedPos = this.currentPhantomPos + (direction * currentStepDistance);
 
+        // Considera si es turno del minotauro y es su primer movimiento
         if(isControllingMinotaur && isFirstMinotaurStep)
         {
             Vector3 centeredPos = GetTileCenterFlat(calculatedPos);
             calculatedPos = new Vector3(centeredPos.x, calculatedPos.y, centeredPos.z);
         }
 
+        // Calcula la nueva posición
         Vector3 potentialTargetPost = new Vector3(calculatedPos.x, 0.05f, calculatedPos.z);
 
+        // Si deshaces el movimiento del minotauro y tiene que regresar al centro del tablero
         if(isControllingMinotaur && pathPositions.Count == 1)
         {
             float currentDistToStart = Vector3.Distance(this.currentPhantomPos, this.initialPlanningPos);
@@ -203,6 +209,7 @@ public class TurnInputController : MonoBehaviour
             }
         }
 
+        // Consideraciones si el jugador quiere volver a la casilla anterior
         bool isBacktracking = false;
         if(pathPositions.Count > 0)
         {
@@ -214,8 +221,10 @@ public class TurnInputController : MonoBehaviour
             if(Vector3.Distance(potentialTargetPost, previousPosToCheck) < 0.01f) isBacktracking = true;
         }
 
+        // Deshace el movimineto del jugador
         if (isBacktracking){ UndoLastStep(); return; }
 
+        // Si hay pasos <= 0, da un mensaje de error y sale de la función
         if(stepsRemaining <= 0)
         {
             if(AudioManager.Instance != null) AudioManager.Instance.playToError();
@@ -224,9 +233,10 @@ public class TurnInputController : MonoBehaviour
 
         if(!isControllingMinotaur && BoardManager.Instance != null)
         {
-            if (BoardManager.Instance.isWinningTile(potentialTargetPost))
+            // Si llegas a la casilla ganadora
+            if (BoardManager.Instance.isWinningTile(potentialTargetPost)) 
             {
-                PlaceWinStep(potentialTargetPost, direction);
+                PlaceWinStep(potentialTargetPost, direction); // Instancia una casilla ganadora
                 return;
             }
         }
@@ -234,21 +244,24 @@ public class TurnInputController : MonoBehaviour
         RaycastHit hit;
         float distanceToCheck = Vector3.Distance(this.currentPhantomPos, potentialTargetPost);
 
+        // Lanza un rayo para validar si choca contra un objeto
         if(Physics.Raycast(this.currentPhantomPos + Vector3.up * 0.1f, direction, out hit, distanceToCheck * 0.9f, allBlockingLayers))
         {
+            // Si el layer es la puerta y el jugador tiene llaves, le permite pasar
             if(doorLayer == (doorLayer | (1 << hit.collider.gameObject.layer)))
             {
                 if(currentExplorer != null && currentExplorer.GetKeyCount() > 0) Debug.Log("Atravesando puerta con llave");
-                else { if(AudioManager.Instance != null) AudioManager.Instance.playToError(); return; }
+                else { if(AudioManager.Instance != null) AudioManager.Instance.playToError(); return; } // Error
             }
-            else { if(AudioManager.Instance != null) AudioManager.Instance.playToError(); return; }
+            else { if(AudioManager.Instance != null) AudioManager.Instance.playToError(); return; } // Error
         }
 
+        // Obtiene la referencia del jugador o minotauro si ocupa un espacio
         Player tileOccupant = GetOccupantAtPosition(potentialTargetPost);
 
         if (!isControllingMinotaur && tileOccupant != null)
         {
-            if (tileOccupant is MinotaurPlayer)
+            if (tileOccupant is MinotaurPlayer) // No permite pasar a través del minotauro
             {
                 if(AudioManager.Instance != null) AudioManager.Instance.playToError();
                 return;
@@ -256,7 +269,9 @@ public class TurnInputController : MonoBehaviour
 
             if(tileOccupant is ExplorerPlayer)
             {
-                if(stepsRemaining == 1)
+                // Si te queda una casilla no te permite pasar a través de un explorador
+                // Protege que el jugador no pueda confimar su posición en una casilla que ya esta ocupada
+                if(stepsRemaining == 1) 
                 {
                     if(AudioManager.Instance != null) AudioManager.Instance.playToError();
                     return;
@@ -264,6 +279,7 @@ public class TurnInputController : MonoBehaviour
             }
         }
 
+        // No te puedes colocar donde ya existe una casilla fantasma
         foreach(Vector3 existingPos in pathPositions)
         {
             if(Vector3.Distance(existingPos, potentialTargetPost) < 0.01f)
@@ -273,21 +289,24 @@ public class TurnInputController : MonoBehaviour
             }
         }
 
+        // Minotauro
         if (isControllingMinotaur)
         {
             Vector3 targetTileCenter = GetTileCenterFlat(potentialTargetPost);
             ExplorerPlayer[] explorers = FindObjectsByType<ExplorerPlayer>(FindObjectsSortMode.None);
-            foreach(var explorer in explorers)
+            foreach(var explorer in explorers) // Valida si la casilla es la misma que la posición de un jugador
             {
                 Vector3 explorerPos = GetTileCenterFlat(explorer.transform.position);
                 if(Vector3.Distance(targetTileCenter, explorerPos) < 0.01f)
                 {
+                    // Pone una casilla de ataque en la posición del jugador
                     PlaceAttackStep(potentialTargetPost, direction, explorer);
                     return;
                 }
             }
         }
 
+        // Pone una casilla fanstasma normal
         PlaceNormalStep(potentialTargetPost, direction);
     }
 
@@ -295,7 +314,7 @@ public class TurnInputController : MonoBehaviour
     {
         Quaternion phantomRotation = Quaternion.LookRotation(dir, Vector3.up);
         GameObject newPhantom = Instantiate(phantomPrefab, pos , phantomRotation);
-        RegisterStep(newPhantom, pos);
+        RegisterStep(newPhantom, pos); // Registra el fantasma en la lista de fantasmas
     }
 
     private void PlaceAttackStep(Vector3 pos, Vector3 dir, ExplorerPlayer victim)
@@ -305,7 +324,7 @@ public class TurnInputController : MonoBehaviour
         GameObject redPhantom = Instantiate(attackPhantomPrefab, pos, phantomRotation);
         RegisterStep(redPhantom, pos);
         
-        ShowAttackConfirmationUI(victim);
+        ShowAttackConfirmationUI(victim); // Muestra el mensaje de confirmación para atacar
     }
 
     private void PlaceWinStep(Vector3 pos, Vector3 dir)
@@ -315,25 +334,26 @@ public class TurnInputController : MonoBehaviour
         RegisterStep(newPhantom, pos);
 
         isPlanning = false;
-        ShowWinConfirmationUI();
+        ShowWinConfirmationUI(); // Muestra el mensaje de confirmación para ganar
     }
 
     private void RegisterStep(GameObject phantom, Vector3 pos)
     {
-        phantoms.Add(phantom);
+        phantoms.Add(phantom); // Añade el fantasma a la lista de fantasmas
         this.pathPositions.Add(pos);
         this.currentPhantomPos = pos;
-        stepsRemaining--;
+        stepsRemaining--; // Reduce los pasos disponibles
 
         if(AudioManager.Instance != null) AudioManager.Instance.playToSelect();
 
         if(isControllingMinotaur && isFirstMinotaurStep) isFirstMinotaurStep = false;
 
         OnPhantomTargetChanged?.Invoke(phantom.transform);
-        UpdatePhantomPulsing();
+        UpdatePhantomPulsing(); // Actualice el último fantasma para que brille y pulse
         OnStepsChanged?.Invoke(stepsRemaining, totalStepsAvailable);
     }
 
+    // Acciones para el canvas de confirmación para ganar
     private void ShowWinConfirmationUI()
     {
         if(cameraManager != null) cameraManager.ForceTopDownView(true);
@@ -350,6 +370,7 @@ public class TurnInputController : MonoBehaviour
         );
     }
 
+    // Acciones para el canvas de confirmación para atacar
     private void ShowAttackConfirmationUI(ExplorerPlayer victim)
     {
         if(cameraManager != null) cameraManager.ForceTopDownView(true);
@@ -368,6 +389,7 @@ public class TurnInputController : MonoBehaviour
         );
     }
 
+    // Acciones para cuando gana un jugador
     private void PerformWinningMove()
     {
         if(cameraManager != null && cameraManager.IsMapModeActive) cameraManager.ToggleMapUI();
@@ -382,6 +404,7 @@ public class TurnInputController : MonoBehaviour
         this.pathPositions.Clear();
     }
 
+    // Acciones para cuando el minotauro ataca
     private void PerformMinotaurAttack(ExplorerPlayer victim)
     {
         if(cameraManager != null) cameraManager.ForceTopDownView(false);
@@ -407,31 +430,36 @@ public class TurnInputController : MonoBehaviour
 
         if(currentMinotaurPlayer != null)
         {
+            // Corrutina de ataque del minotauro
             currentMinotaurPlayer.BeginAttackSequence(approachPath, victim.transform, onAttackFinishedCallback, this);
         }
         else onAttackFinishedCallback.Invoke();
     }
 
+    // Confirmación del movimiento
     public void ConfirmMovement()
     {
         if(stepsRemaining > 0) return;
 
         if(cameraManager != null) cameraManager.ForceTopDownView(true);
 
-        int doorsCrossed = CounterDoorsInPath();
+        int doorsCrossed = CounterDoorsInPath(); // Si el jugador cruzo puertas
         
+        // Acción para cancelar 
         Action onCancelCommon = () =>
         {
             if(cameraManager != null) cameraManager.ForceTopDownView(false);    
         };
 
+        // Acción para confirmar
         Action onFinalConfirm = () =>
         {
             if(doorsCrossed > 0 && currentExplorer != null)
             {
+                // Si el jugador cruzo puertas, reduce su contador de llaves
                 for(int i = 0; i < doorsCrossed; i++) currentExplorer.TryRemoveKey();
             }
-            ProceedWithMovement();
+            ProceedWithMovement(); // Reproduce el movimiento
         };
 
         Action showMovementPopup = () =>
@@ -439,6 +467,8 @@ public class TurnInputController : MonoBehaviour
             UIManager.Instance.ShowMovementConfirmation(onFinalConfirm, onCancelCommon);
         };
 
+        // Si el jugador cruzo puertas, te muestra un mensaje para preguntar si estás seguro
+        // de gastar llaves
         if(doorsCrossed > 0 && currentExplorer != null && currentExplorer.GetKeyCount() >= doorsCrossed)
         {
             string keyMessage = $"Gastar {doorsCrossed} llave(s) para abrir las puertas?";
@@ -457,6 +487,7 @@ public class TurnInputController : MonoBehaviour
         }
     }
 
+    // Cuenta las puertas que un jugador cruzo en un turno
     private int CounterDoorsInPath()
     {
         int doorCount = 0;
@@ -478,6 +509,7 @@ public class TurnInputController : MonoBehaviour
         return doorCount;
     }
 
+    // Movimiento normal de camninar
     private void ProceedWithMovement()
     {
         if(cameraManager != null && cameraManager.IsMapModeActive)
@@ -491,21 +523,23 @@ public class TurnInputController : MonoBehaviour
 
         GameManager.Instance.playerIsHeadingToWin = false;
 
+        // Reproduce la animación de movimiento
         this.currentPlayer.Move(new List<Vector3>(this.pathPositions), GameManager.Instance.EndMovementState);
         this.pathPositions.Clear();
     }
 
+    // Deshace el último movimiento 
     private void UndoLastStep()
     {
         if(pathPositions.Count == 0 || phantoms.Count == 0) return;
         int lastIndex = phantoms.Count - 1;
 
-        Destroy(phantoms[lastIndex]);
-        phantoms.RemoveAt(lastIndex);
+        Destroy(phantoms[lastIndex]); // Destruye el fantasma
+        phantoms.RemoveAt(lastIndex); // Elimina la referencia del fantasma de la lista
 
-        pathPositions.RemoveAt(lastIndex);
+        pathPositions.RemoveAt(lastIndex); // Elimina la última posición de la lista
 
-        stepsRemaining++;
+        stepsRemaining++; // Aumenta el contador de pasos disponibles
 
         if(pathPositions.Count > 0)
         {
@@ -526,6 +560,7 @@ public class TurnInputController : MonoBehaviour
         OnStepsChanged?.Invoke(stepsRemaining, totalStepsAvailable);
     }
 
+    // Obtiene el centro de la casilla, respecto al grid
     private Vector3 GetTileCenterFlat(Vector3 position)
     {
         float snappedX = Mathf.Floor(position.x / gridSize) * gridSize + (gridSize / 2f);
@@ -533,11 +568,13 @@ public class TurnInputController : MonoBehaviour
         return new Vector3(snappedX, 0f, snappedZ);
     }
 
+    // Forza el target de la cámara
     public void ForceCameraFocus(Transform target)
     {
         OnFocusUnitChanged?.Invoke(target);
     }
 
+    // Actualiza el color y pulso del último fantasma
     private void UpdatePhantomPulsing()
     {
         if(phantoms.Count == 0) return;
@@ -565,6 +602,7 @@ public class TurnInputController : MonoBehaviour
         }
     }
 
+    // Limpia la lista de fantasmas
     private void ClearPhantoms()
     {
         foreach(GameObject p in phantoms)
@@ -577,17 +615,17 @@ public class TurnInputController : MonoBehaviour
     // CPU
     public void SimulateCPUStep(Vector3 targetPos, Vector3 direction)
     {
-        // Calculamos la rotación
+        // Calcula la rotación
         Quaternion phantomRotation = Quaternion.LookRotation(direction, Vector3.up);
 
-        // 1. LÓGICA DE SALIDA/VICTORIA
+        // Lógica de victoria
         if (!isControllingMinotaur && BoardManager.Instance != null && BoardManager.Instance.isWinningTile(targetPos))
         {
             PlaceWinStep(targetPos, direction);
             return;
         }
 
-        // 2. LÓGICA DE ATAQUE (Minotauro)
+        // Lógica de ataque del minotauro
         if (isControllingMinotaur)
         {
             Vector3 targetTileCenter = GetTileCenterFlat(targetPos);
@@ -603,7 +641,7 @@ public class TurnInputController : MonoBehaviour
             }
         }
 
-        // 3. PASO NORMAL
+        // Lógica de un paso normal
         PlaceNormalStep(targetPos, direction);
     }
 }

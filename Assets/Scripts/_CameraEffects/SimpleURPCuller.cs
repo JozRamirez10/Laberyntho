@@ -2,28 +2,29 @@ using UnityEngine;
 using System.Collections.Generic;
 using Unity.Cinemachine;
 
+// Vuelve transparentes los objetos marcados con la capa
+// y cuando están entre el jugador y la cámara
 public class SimpleURPCuller : MonoBehaviour
 {
-    [Header("Configuración General")]
-    [Tooltip("La capa de los objetos que se deben volver transparentes.")]
+    [Header("Obstacle Layer Mask")]
     public LayerMask obstacleLayerMask;
-    [Tooltip("El objetivo al que mira la cámara (el jugador actual).")]
+    
+    [Tooltip("Camera target")]
     public Transform targetToLookAt;
-    [Tooltip("Qué tan transparente se vuelve el objeto (0 = invisible, 1 = opaco).")]
+
+    [Header("Trasnparent settings")]
     [Range(0f, 1f)] public float fadedOpacity = 0.2f;
-    [Tooltip("Velocidad del efecto de desvanecimiento.")]
     public float fadeSpeed = 10f;
 
-    [Header("Configuración de Detección Trasera (Caja)")]
-    [Tooltip("Cuánto se extiende la caja de detección hacia ATRÁS de la cámara.")]
+    [Header("Box camera settings")]
     public float backwardDetectionDistance = 1.0f;
-    [Tooltip("El ancho y alto de la caja de detección trasera. Mantenlo estrecho para no detectar muros laterales.")]
     public Vector2 backwardBoxSize = new Vector2(0.5f, 0.8f); // X = Ancho, Y = Alto
 
     [Header("Exclud Camera")]
     public string topDownCameraName = "CM_TopDown";
     private CinemachineBrain brain;
 
+    // Esta clase nos ayuda a validar si el material es configurado como shader propio
     private class MaterialState
     {
         public bool isCustomShader;
@@ -42,7 +43,6 @@ public class SimpleURPCuller : MonoBehaviour
         if(brain == null) Debug.Log("No se encontró Cinemachine Brain");
     }
 
-    // --- CORRECCIÓN CRÍTICA: RESTAURAR AL DESACTIVAR ---
     void OnDisable()
     {
         // Cuando CameraManager pone este script en enabled = false,
@@ -65,11 +65,10 @@ public class SimpleURPCuller : MonoBehaviour
             }
         }
 
-        // Limpiamos las listas para empezar frescos la próxima vez que se active
+        // Limpiamos las listas para la siguiente vez que se active
         originalStates.Clear();
         currentlyHitRenderers.Clear();
     }
-    // ----------------------------------------------------
 
     void LateUpdate()
     {
@@ -80,6 +79,8 @@ public class SimpleURPCuller : MonoBehaviour
         {
             ICinemachineCamera activeCam = brain.ActiveVirtualCamera;
             Component activeCamComponent = activeCam as Component;
+
+            // Valida si el culling debería activarse
             if(activeCamComponent != null && activeCamComponent.gameObject.name == topDownCameraName)
             {
                 shouldDisableCulling = true;
@@ -90,7 +91,8 @@ public class SimpleURPCuller : MonoBehaviour
 
         if (!shouldDisableCulling)
         {
-            // --- PASO 1: Detección con CAJA hacia atrás ---
+            // Detección con caja hacia atrás // Deja un espacio hacia atrás para que nigún muro bloque la vista 
+            // en primera persona
             Vector3 boxSize = new Vector3(backwardBoxSize.x, backwardBoxSize.y, backwardDetectionDistance);
             Vector3 boxCenter = transform.position - (transform.forward * (backwardDetectionDistance * 0.5f));
 
@@ -102,7 +104,7 @@ public class SimpleURPCuller : MonoBehaviour
                 ProcessRenderer(rend);
             }
 
-            // --- PASO 2: Lanzar rayo hacia el objetivo ---
+            // Lanzar rayo hacia el objetivo
             Vector3 dir = targetToLookAt.position - transform.position;
             float dist = dir.magnitude;
             RaycastHit[] hits = Physics.RaycastAll(transform.position, dir, dist, obstacleLayerMask);
@@ -114,10 +116,11 @@ public class SimpleURPCuller : MonoBehaviour
             }
         }
         
-        // --- PASO 3: Actualizar transparencias ---
+        // Actualizar transparencias
         UpdateMaterialTransparencies();
     }
 
+    // Renderiza al material de acuerdo a si tiene un shader personalizado o no
     private void ProcessRenderer(Renderer rend)
     {
         if (rend == null) return;
@@ -142,6 +145,7 @@ public class SimpleURPCuller : MonoBehaviour
         }
     }
 
+    // Actualiza la transparencia de los materiales
     private void UpdateMaterialTransparencies()
     {
         if(tempPropBlock == null) tempPropBlock = new MaterialPropertyBlock();
@@ -187,6 +191,7 @@ public class SimpleURPCuller : MonoBehaviour
         }
     }
 
+    // Dibuja un gizmo para obtener referencia de las distancias (debug)
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;

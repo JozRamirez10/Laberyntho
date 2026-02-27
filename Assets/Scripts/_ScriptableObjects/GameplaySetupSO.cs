@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 
+// Configuración de los jugadores y de sus turnos
 [CreateAssetMenu(fileName = "GameplaySetup", menuName = "Scriptable Objects/Gameplay Setup")]
 public class GameplaySetupSO : ScriptableObject
 {

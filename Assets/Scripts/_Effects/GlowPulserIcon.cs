@@ -1,5 +1,7 @@
 using UnityEngine;
 
+// Controla el pulso del brillo de las casillas de movimiento 
+// y del icono del jugador
 public class GlowPulserIcon : MonoBehaviour
 {
     [Header("Pulse Settings")]
@@ -16,7 +18,9 @@ public class GlowPulserIcon : MonoBehaviour
     private int colorPropID;
     private int isPulsingID;
 
-    void Awake() {
+    // Optiene las propiedades del material y los shaders
+    void Awake() 
+    {
         targetRenderers = GetComponentsInChildren<Renderer>();
         propBlock = new MaterialPropertyBlock();
 
@@ -30,11 +34,13 @@ public class GlowPulserIcon : MonoBehaviour
         ApplySettings(baseColor, 0f);
     }
 
+    // Si se deshabilita, regresa el material a su estado original
     void OnDisable()
     {
         ApplySettings(baseColor, 0f);
     }
 
+    // Modifica el color y el pulso del material
     private void ApplySettings(Color color, float pulsingValue)
     {
         if(targetRenderers == null || targetRenderers.Length == 0) return;
@@ -51,6 +57,7 @@ public class GlowPulserIcon : MonoBehaviour
         }
     }
 
+    // Método que activa o desactiva el estado desde el exterior del script
     public void SetGlowState(bool isActive, bool shouldPulse)
     {
         gameObject.SetActive(isActive);

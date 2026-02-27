@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
 
+// Configuración de audios
 public class AudioManager : MonoBehaviour
 {
     public AudioSource musicSource;
@@ -39,6 +40,7 @@ public class AudioManager : MonoBehaviour
         PlayMusic(currentSceneName);
     }
 
+    // Carga los volumenes guardados en el Scriptable Object
     public void LoadAudioSettings()
     {
         MasterVolume(gameSettingsSO.masterVolume);

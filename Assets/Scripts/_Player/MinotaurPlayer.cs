@@ -3,7 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-public class MinotaurPlayer : Player
+public class MinotaurPlayer : Player // Hereda de Player
 {
     [Header("Attack Settings - Minotaur")]
     [SerializeField] private string roarBool = "isAttacking";
@@ -25,13 +25,15 @@ public class MinotaurPlayer : Player
         base.SnapToGround(targetPos);
         transform.rotation = startRotation;
     }
-    
+
+    // Reproduce corrutina de ataque    
     public void BeginAttackSequence(List<Vector3> approachPath, Transform victimTransform, Action onSequenceComplete, TurnInputController turnController)
     {
         this.turnController = turnController;
         StartCoroutine(AttackSequenceRoutine(approachPath, victimTransform, onSequenceComplete));
     }
 
+    // Corrutina de ataque del minotauro
     private IEnumerator AttackSequenceRoutine(List<Vector3> approachPath, Transform victimTransform, Action onComplete)
     {
         Animator anim = GetComponentInChildren<Animator>();
@@ -52,13 +54,13 @@ public class MinotaurPlayer : Player
         if(directionToVictim != Vector3.zero) transform.rotation = Quaternion.LookRotation(directionToVictim);
 
         Player victimPlayer = victimTransform.GetComponent<Player>();
+        // Antes de ser destruido, el jugador mira al minotauro
         if(victimPlayer != null) victimPlayer.LookAt(this.transform.position);
 
         if(anim != null)
         {
-            anim.SetBool(roarBool, true);
+            anim.SetBool(roarBool, true); // Animación de rugido
             
-            // yield return new WaitForSeconds(0.1f);
             yield return null;
             yield return new WaitForEndOfFrame();
 
@@ -73,10 +75,7 @@ public class MinotaurPlayer : Player
 
             yield return new WaitForSeconds(postRoarWaitTime);
         }
-        else
-        {
-            yield return new WaitForSeconds(1.0f);
-        }
+        else yield return new WaitForSeconds(1.0f);
 
         ExplorerPlayer victimExplorer = victimTransform.GetComponent<ExplorerPlayer>();
         if(victimExplorer != null)
@@ -90,8 +89,8 @@ public class MinotaurPlayer : Player
                 GameManager.Instance.cameraManager.SetCameraTarget(victimTransform);
             }
 
-            victimExplorer.InstantMoveTo(victimExplorer.startPosition);
-            this.InstantMoveTo(this.startPosition);
+            victimExplorer.InstantMoveTo(victimExplorer.startPosition); // El jugador se mueve a su posición original
+            this.InstantMoveTo(this.startPosition); // El minotauro se mueve a su posición original
             
             yield return new WaitForSeconds(0.5f);
 

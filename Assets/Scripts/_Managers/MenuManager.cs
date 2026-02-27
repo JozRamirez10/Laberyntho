@@ -75,15 +75,17 @@ public class MenuManager : MonoBehaviour
         }
     }
 
+    // Valida si el jugador ha seleccionado todas las opciones
+    // para habilitar el botón de inicio del juego
     private void ValidateStartButtonState()
     {
         if(startGameButton == null) return;
 
         bool isRandom = randomOrderToggle != null && randomOrderToggle.isOn;
 
-        if (isRandom)
+        if (isRandom) // Si el checkbox indica que los turnos son aleatorios
         {
-            startGameButton.interactable = true;
+            startGameButton.interactable = true; // Habilita el botón de inicio
             setColor(isRandom);
         }
         else
@@ -91,7 +93,7 @@ public class MenuManager : MonoBehaviour
             bool allDropdownsValid = true;
             foreach(var dd in turnSelector.dropdowns)
             {
-                if(dd.value == 0)
+                if(dd.value == 0) // Valida que se hayan designado los turnos
                 {
                     allDropdownsValid = false;
                     break;
@@ -103,18 +105,14 @@ public class MenuManager : MonoBehaviour
         }
     }
 
+    // Coloca el botón de habilitado o deshabilitado al botón de inicio
     private void setColor(bool isValid)
     {
-        if (isValid)
-        {
-            startGameButtonImage.color = activeColor;
-        }
-        else
-        {
-            startGameButtonImage.color = disableColor;
-        }
+        if (isValid) startGameButtonImage.color = activeColor;
+        else startGameButtonImage.color = disableColor;
     }
 
+    // Modifica el panel de navegación entre botones
     private void setNav(bool isValid)
     {
         Navigation fourthNav = fourthDropdown.navigation;
@@ -132,7 +130,6 @@ public class MenuManager : MonoBehaviour
             returnNav.selectOnUp = fourthDropdown;
             returnNav.selectOnLeft = null;
         }
-
         fourthDropdown.navigation = fourthNav;
         returnButton.navigation = returnNav;
     }
@@ -147,6 +144,7 @@ public class MenuManager : MonoBehaviour
         nameSceneToPlay = Scenes.RANDOM;
     }
 
+    // Configura el modo de juego seleccionado (escena)
     public void OnStartGameButtonPressed()
     {
         if(gameplaySetupSO == null) return;
@@ -164,6 +162,7 @@ public class MenuManager : MonoBehaviour
         if (setupSuccesful && nameSceneToPlay != null) SceneManager.LoadScene(nameSceneToPlay);
     }
 
+    // Configura el turno de los jugadores de forma manual
     private bool SetupManualGame()
     {
         for(int i = 0; i < turnSelector.dropdowns.Length; i++)
@@ -178,6 +177,7 @@ public class MenuManager : MonoBehaviour
             {
                 string finalName = GetNameForSprite(selectedSprite, i);
                 bool isCPU = playerCPUDropdowns[i].value == 1; // 0 = Player, 1 = CPU
+                // Guadar al jugador en el GameplaySetupSO
                 AddPlayerToSO(finalName, selectedPrefab, isCPU);
             }
             else return false;
@@ -186,6 +186,7 @@ public class MenuManager : MonoBehaviour
         return true;
     }
 
+    // Configura el turno de los jugadores de forma aleatoria
     private bool SetupRandomGame()
     {
         List<GameplaySetupSO.PlayerSetupData> selectedPlayers = new List<GameplaySetupSO.PlayerSetupData>();
@@ -199,6 +200,7 @@ public class MenuManager : MonoBehaviour
             {
                 string name = GetNameForMapping(mapping, i + 1);
                 bool isCPU = playerCPUDropdowns[i].value == 1; // Player = 0, CPU = 1
+                // Guadar al jugador en el GameplaySetupSO
                 selectedPlayers.Add(new GameplaySetupSO.PlayerSetupData
                 {
                     playerName = name,
@@ -213,6 +215,7 @@ public class MenuManager : MonoBehaviour
         return true;
     }
 
+    // Añade la configuración del jugador al GameplaySetupSO
     private void AddPlayerToSO(string name, Player prefab, bool isCPU)
     {
         GameplaySetupSO.PlayerSetupData newData = new GameplaySetupSO.PlayerSetupData
@@ -225,6 +228,7 @@ public class MenuManager : MonoBehaviour
         gameplaySetupSO.orderedPlayers.Add(newData);
     }
 
+    // Le asigna nombre al jugador
     private string GetNameForMapping(NameToCharacterMapping mapping, int index)
     {
         if(mapping.nameInputField != null && !string.IsNullOrEmpty(mapping.nameInputField.text))
@@ -239,6 +243,7 @@ public class MenuManager : MonoBehaviour
         return $"Jugador {index}";
     }
 
+    // Obtiene el nombre del jugador que corresponda al sprite
     private string GetNameForSprite(Sprite spritToFind, int index)
     {
         foreach(var mapping in nameMappings)

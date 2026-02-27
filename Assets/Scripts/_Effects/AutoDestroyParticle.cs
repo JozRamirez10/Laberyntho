@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Cuando el sistema de particulas termina de reproducirse, lo destruye
 public class AutoDestroyParticle : MonoBehaviour
 {
     private ParticleSystem ps;

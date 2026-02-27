@@ -9,11 +9,13 @@ public class Pathfinding : MonoBehaviour
     public class Node
     {
         public Vector3 worldPosition;
-        public float gCost;
-        public float hCost;
-        public Node parent;
-        public int keysRemaining;
+        public float gCost; // Costo del inicio al nodo actual
+        public float hCost; // Qué tan lejos está de la meta
+        public Node parent; // Nodo anterior
+        public int keysRemaining; // Considera si el jugador tiene llaves
 
+        // Suma de los costos
+        // Siempre busca el costo más bajo
         public float FCost { get { return gCost + hCost; } }
 
         public Node(Vector3 _worldPos, int _keys)
@@ -36,15 +38,17 @@ public class Pathfinding : MonoBehaviour
         else Destroy(gameObject);    
     }
 
+    // Busca el camino
     public List<Vector3> FindPath(Vector3 startPos, Vector3 targetPos, int keyCount = 0)
     {
+        // Revisa si es el turno del minotauro
         bool isMinotaur = false;
         if(GameManager.Instance.minotaurInstance != null)
         {
             isMinotaur = Vector3.Distance(startPos, GameManager.Instance.minotaurInstance.transform.position) < 0.5f;
         } 
 
-        // BLOQUEO: Evitamos que el ajuste al grid inicial rompa la detección del centro
+        // Evita que el ajuste al grid inicial rompa la detección del centro
         Node startNode;
         if (isMinotaur && IsWinningZone(startPos)) 
         {
@@ -54,28 +58,29 @@ public class Pathfinding : MonoBehaviour
         }
         else 
         {
-            startNode = new Node(GetTileCenter(startPos), keyCount);
+            startNode = new Node(GetTileCenter(startPos), keyCount); // Casilla de inicio
         }
         
-        Node targetNode = new Node(GetTileCenter(targetPos), 0);
+        Node targetNode = new Node(GetTileCenter(targetPos), 0); // Casilla objetivo
 
         Debug.Log($"<color=cyan>[Pathfinding INIT]</color> Inicio: {startNode.worldPosition} | Meta: {targetNode.worldPosition}");
 
-        List<Node> openSet = new List<Node>();
-        HashSet<Vector3> closedSet = new HashSet<Vector3>();
+        List<Node> openSet = new List<Node>(); // Casillas por explorar
+        HashSet<Vector3> closedSet = new HashSet<Vector3>(); // Casillas ya evaluadas
 
         openSet.Add(startNode);
-        int safetyCounter = 0;
+        int safetyCounter = 0; // Contador que evita que el juego se congele si el laberinto no tiene salida
 
         while(openSet.Count > 0)
         {
             safetyCounter++;
-            if(safetyCounter > maxSearchDeepth)
+            if(safetyCounter > maxSearchDeepth) // Mientras haya casillas por explorar, sigue buscando
             {
                 Debug.LogWarning($"Pathfinding agotado tras {maxSearchDeepth} iteraciones.");
                 return null;
             } 
 
+            // Revisa la lista de nodos para obtener quién tiene el costo más bajo
             Node currentNode = openSet[0];
             for(int i = 1; i < openSet.Count; i++)
             {
@@ -85,12 +90,14 @@ public class Pathfinding : MonoBehaviour
                 }
             }
 
-            openSet.Remove(currentNode);
+            // Saca el nodo con menos costo de la lista de casillas por explorar y lo guarda en la lista de casillas evaluadas
+            openSet.Remove(currentNode); 
             closedSet.Add(currentNode.worldPosition);
 
-            // Verificación de llegada
+            // Verificación de llegada a la meta
             if(Vector3.Distance(currentNode.worldPosition, targetNode.worldPosition) < 0.5f)
             {
+                // Construye el camino a la meta
                 List<Vector3> path = RetracePath(startNode, currentNode);
                 
                 // DEBUG LOG: Imprimir coordenadas de la ruta para validar el salto
@@ -101,12 +108,14 @@ public class Pathfinding : MonoBehaviour
                 return path;
             }
 
+            // Permite saltar al minotauro (su primer paso)
             bool canJump = isMinotaur && (currentNode.worldPosition == startNode.worldPosition) && IsWinningZone(currentNode.worldPosition);
             List<Node> neighbors = GetNeighbors(currentNode, canJump);
             Debug.Log($"<color=white>[PF]</color> Evaluando {neighbors.Count} vecinos de {currentNode.worldPosition}. Iteración: {safetyCounter}");
 
             foreach(Node neighbor in neighbors)
             {
+                // Si ya evaluamos al vecino, lo ignoramos
                 if(closedSet.Contains(neighbor.worldPosition)) continue;
 
                 // Evitar al Minotauro si no somos él (usando la posición inicial como referencia)
@@ -118,29 +127,33 @@ public class Pathfinding : MonoBehaviour
                     if(distToMinotaur < 0.1f && distToTarget > 0.1f) continue;
                 }
 
+                // Si hay un muro, lo evitamos
                 if(HashWall(currentNode.worldPosition, neighbor.worldPosition))
                 {
                     Debug.Log($"<color=red>[PF Block]</color> Muro detectado hacia {neighbor.worldPosition}");
                     continue;
                 } 
 
+                // Si hay una puerta en el camino, revisamos si el jugador tiene llaves
                 int keysForNexStep = currentNode.keysRemaining;
                 if(HasDoor(currentNode.worldPosition, neighbor.worldPosition))
                 {
-                    if(currentNode.keysRemaining > 0) {
+                    if(currentNode.keysRemaining > 0) { // Si tiene llaves, gastamos la llave para pasar por la puerta
                         keysForNexStep = currentNode.keysRemaining - 1;
                         Debug.Log($"<color=blue>[PF Door]</color> Usando llave hacia {neighbor.worldPosition}. Quedan: {keysForNexStep}");
                     }
-                    else
+                    else // Si no, evitamos el camino
                     {
                         Debug.Log($"<color=red>[PF Block]</color> Puerta bloqueada hacia {neighbor.worldPosition} (Sin llaves)");
                         continue;
                     } 
                 }
 
+                // Calcula el costo del viaje
                 float newMovementCostToNeighbor = currentNode.gCost + GetDistance(currentNode, neighbor);
                 Node existingNeighbor = openSet.FirstOrDefault(n => Vector3.Distance(n.worldPosition, neighbor.worldPosition) < 0.1f);
 
+                // Asignamos la información del nodo: costos, llaves, parent. Y lo almacenamos en openSet
                 if(existingNeighbor == null || newMovementCostToNeighbor < existingNeighbor.gCost)
                 {
                     neighbor.keysRemaining = keysForNexStep;
@@ -156,6 +169,7 @@ public class Pathfinding : MonoBehaviour
         return null;
     }
 
+    // Obtiene las casillas vecinas
     private List<Node> GetNeighbors(Node node, bool canJump)
     {
         List<Node> neighbors = new List<Node>();
@@ -173,6 +187,7 @@ public class Pathfinding : MonoBehaviour
         return neighbors;
     }
 
+    // Valida si está en la zona de las casillas ganadoras
     private bool IsWinningZone(Vector3 position)
     {
         // El centro absoluto suele estar en el offset del grid
@@ -181,6 +196,7 @@ public class Pathfinding : MonoBehaviour
         return Mathf.Abs(position.x) < offset && Mathf.Abs(position.z) < offset;
     }
 
+    // Valida si la casilla tiene un muro
     private bool HashWall(Vector3 currentPos, Vector3 targetPos)
     {
         Vector3 dir = (targetPos - currentPos).normalized;
@@ -190,6 +206,7 @@ public class Pathfinding : MonoBehaviour
         return false;
     }
 
+    // Valida si la casilla tiene una puerta
     private bool HasDoor(Vector3 currentPos, Vector3 targetPos)
     {
         Vector3 dir = (targetPos - currentPos).normalized;
@@ -198,6 +215,7 @@ public class Pathfinding : MonoBehaviour
         return false;
     }
 
+    // De acuerdo al camino, lo reconstruye para que el jugador pueda caminar a través de el
     private List<Vector3> RetracePath(Node startNode, Node endNode)
     {
         List<Vector3> path = new List<Vector3>();
@@ -218,6 +236,7 @@ public class Pathfinding : MonoBehaviour
         return Mathf.RoundToInt(Vector3.Distance(nodeA.worldPosition, nodeB.worldPosition) * 10);
     }
 
+    // Obtiene el centro de la casilla 
     private Vector3 GetTileCenter(Vector3 pos)
     {
         float x = Mathf.Floor(pos.x / gridSize) * gridSize + (gridSize / 2f);

@@ -1,3 +1,5 @@
+// Constantes utilizadas para el videojuego
+
 public static class Scenes
 {
     public const string MENU = "Menu";

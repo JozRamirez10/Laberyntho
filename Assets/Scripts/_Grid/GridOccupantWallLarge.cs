@@ -20,12 +20,12 @@ public class GridOccupantWallLarge : GridOccupant
         Vector3 right = transform.right;
         Vector3 forward = transform.forward;
         
-        // --- PASO 1: ENCONTRAR CENTRO MURO (PUNTO ROJO) ---
+        // Centro del muro
         // Lógica específica 2x1: Pivote atrás -> Restamos mitad profundidad
         Vector3 centroMuro = transform.position - (forward * (totalDepth / 2f));
         centroMuro.y = transform.position.y;
 
-        // --- PASO 2: DISTRIBUIR PUNTOS AZULES ---
+        // Distribuye puntos azules
         float startOffsetFromCenter = -(totalWidth / 2f) + (tileSize / 2f);
 
         for (int x = 0; x < baseSize.x; x++)
@@ -54,7 +54,7 @@ public class GridOccupantWallLarge : GridOccupant
         return bluePoints;
     }
 
-    // Opcional: Si quieres ver el "Punto Rojo" específico de este cálculo en los gizmos
+    // Punto Rojo específico de este cálculo en los gizmos
     protected override void OnDrawGizmosSelected()
     {
         base.OnDrawGizmosSelected(); // Dibuja lo básico

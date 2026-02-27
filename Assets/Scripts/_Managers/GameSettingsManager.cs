@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Carga y guarda las configuraciones de resolución y audio
 public class GameSettingsManager : MonoBehaviour
 {
     public static GameSettingsManager Instance;

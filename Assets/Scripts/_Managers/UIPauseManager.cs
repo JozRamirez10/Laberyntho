@@ -71,16 +71,17 @@ public class UIPauseManager : MonoBehaviour
         else { Destroy(gameObject); return;}
 
         if(principalPanel != null) principalPanel.SetActive(false);
-        Time.timeScale = 1f;
+        Time.timeScale = gameSettingsSO.speedGame;
     }
 
     void Start()
     {
-        LoadAudioSliderSettings();
+        LoadAudioSliderSettings(); // Configura los sliders del volumen
     }
 
     void Update()
     {
+        // Si se presiona el botón [ESC] activa el menú de pausa
         if (Input.GetKeyDown(KeyCode.Escape)) TogglePause();
 
         if(isPaused && EventSystem.current.currentSelectedGameObject != lastSelectedObject)
@@ -98,8 +99,8 @@ public class UIPauseManager : MonoBehaviour
 
     public void TogglePause()
     {
-        if(isPaused) BackToGame();
-        else Pause();
+        if(isPaused) BackToGame(); // Si el juego esta pausado, vuelve al juego
+        else Pause(); // Si no, pausa el juego
     }
 
     private void Pause()
@@ -128,6 +129,7 @@ public class UIPauseManager : MonoBehaviour
         if(AudioManager.Instance != null) AudioManager.Instance.playToBack();
     }
 
+    // Forza la selección de botones al pasar de un panel a otro
     private void ForceSelectionButton(Selectable btnToSelect)
     {
         if(EventSystem.current != null && btnToSelect != null && btnToSelect.gameObject.activeInHierarchy && btnToSelect.interactable)
@@ -139,6 +141,7 @@ public class UIPauseManager : MonoBehaviour
         }
     }
 
+    // Quita toda la selección de colores de los botones
     private void ResetAllTextColors()
     {
         if (pausePanel.gameObject.activeInHierarchy)
@@ -173,6 +176,7 @@ public class UIPauseManager : MonoBehaviour
         }
     }
 
+    // Actualiza la selección de botones de acuerdo al panel y selección
     private void UpdateTextColors(GameObject selectedObj)
     {
         ResetAllTextColors();
@@ -209,15 +213,17 @@ public class UIPauseManager : MonoBehaviour
         }
     }
 
+    // Volver al menú principal
     public void OnExitGameButtonPressed()
     {
-        Time.timeScale = 1f;
+        Time.timeScale = gameSettingsSO.speedGame;
         SceneManager.LoadScene(Scenes.MENU);
     }
 
+    // Reinicia la escena
     public void OnResetGameButtonPressed()
     {
-        Time.timeScale = 1f;
+        Time.timeScale = gameSettingsSO.speedGame;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
@@ -260,6 +266,7 @@ public class UIPauseManager : MonoBehaviour
         ForceSelectionButton(cancelExitButton);
     }
 
+    // Configura los sliders de volumen
     public void LoadAudioSliderSettings()
     {
         if(masterSlider != null) masterSlider.SetValueWithoutNotify(gameSettingsSO.masterVolume);

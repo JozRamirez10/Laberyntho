@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
+// Comportamiento del scroll
 [RequireComponent(typeof(ScrollRect))]
 public class ScrollToSelected : MonoBehaviour
 {
@@ -14,6 +15,7 @@ public class ScrollToSelected : MonoBehaviour
     {
         m_ScrollRect = GetComponent<ScrollRect>();
         m_RectTransform = GetComponent<RectTransform>();
+        
         // Aseguramos que el scrollrect tenga contenido asignado
         if (m_ScrollRect.content != null)
         {
@@ -28,7 +30,7 @@ public class ScrollToSelected : MonoBehaviour
 
     void Update()
     {
-        // Obtenemos el objeto seleccionado actualmente por el sistema de eventos
+        // Objeto seleccionado actualmente por el sistema de eventos
         GameObject selected = EventSystem.current.currentSelectedGameObject;
 
         if (selected == null) return;
@@ -79,7 +81,7 @@ public class ScrollToSelected : MonoBehaviour
             }
         }
 
-        // (Opcional) Lógica para movimiento Horizontal si tu dropdown fuera horizontal
+        // Lógica para movimiento Horizontal 
         if (m_ScrollRect.horizontal)
         {
             if (targetRect.xMin < viewportRect.xMin)
@@ -97,12 +99,6 @@ public class ScrollToSelected : MonoBehaviour
         {
             // Movemos el contenido suavemente hacia la nueva posición
             m_ContentRectTransform.anchoredPosition += delta;
-            
-            // Alternativa: Si prefieres un movimiento instantáneo en lugar de suave, usa esto:
-            // m_ContentRectTransform.anchoredPosition += delta; 
-            // Y en el Update podrías usar Vector2.Lerp para suavizarlo si lo deseas, 
-            // pero el cálculo de 'delta' arriba ya hace el trabajo frame a frame.
-            // Para este caso específico, añadir el delta directamente suele funcionar mejor y más rápido para navegación por teclado.
         }
     }
 }

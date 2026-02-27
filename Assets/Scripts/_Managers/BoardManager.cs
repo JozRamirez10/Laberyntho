@@ -18,35 +18,34 @@ public class BoardManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
+    // Intenta registrar una celda ocupada en el grid del tablero
     public void RegisterOccupancy(GridOccupant occupant)
     {
-        if (!registeredOccupants.Contains(occupant))
+        if (!registeredOccupants.Contains(occupant)) // Si la celda no esta dentro de la lista
         {
-            // --- DEBUG LOG ---
             List<Vector3> points = occupant.GetOccupiedWorldCenters();
             string pointsStr = "";
             foreach(var p in points) pointsStr += $"({p.x:F1}, {p.z:F1}) ";
             Debug.Log($"[BOARD] Registrando {occupant.name}. Ocupa: {pointsStr}");
-            // -----------------
 
-            if (!IsAreaFree(points, occupant))
+            if (!IsAreaFree(points, occupant)) // Valida si la posición no está ocupada
             {
                 Debug.LogWarning($"¡COLISIÓN! {occupant.name} choca con otro objeto.");
             }
-            registeredOccupants.Add(occupant);
+            registeredOccupants.Add(occupant); // Registra la celda
         }
     }
 
+    // Elimina una casilla ocupada de la lista del board
     public void UnregisterOccupancy(GridOccupant occupant)
     {
         if (registeredOccupants.Contains(occupant)) 
         {
-            // Debug.Log($"[BOARD] Des-registrando {occupant.name}");
             registeredOccupants.Remove(occupant);
         }
     }
 
-    // --- NUEVA FUNCIÓN DE DIAGNÓSTICO ---
+    // (Debug) muestra el estado de la casilla
     public void DebugOccupantStatus(GridOccupant occupant)
     {
         if(registeredOccupants.Contains(occupant))
@@ -61,8 +60,8 @@ public class BoardManager : MonoBehaviour
             Debug.LogError($"[BOARD DIAGNOSTICO] ¡El muro {occupant.name} NO está en la lista de registrados!");
         }
     }
-    // ------------------------------------
 
+    // Valida si la casilla está libre en el tablero
     public bool IsAreaFree(List<Vector3> pointsToCheck, GridOccupant ignoredObject = null)
     {
         float collisionThreshold = tileSize * 0.45f;
@@ -87,6 +86,7 @@ public class BoardManager : MonoBehaviour
         return true; 
     }
 
+    // Valida si el punto está dentro del tablero
     public bool ArePointWithinBounds(List<Vector3> points)
     {
         float halfWidth = (totalColumns * tileSize) / 2f - (tileSize * 0.1f);
@@ -100,6 +100,7 @@ public class BoardManager : MonoBehaviour
         return true;
     }
 
+    // Activa el shader para todos los objetos dentro del tablero que sean seleccionables
     public void ToggleHighlightMovableObjects(bool active)
     {
         foreach(var occupant in registeredOccupants)
@@ -108,6 +109,7 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    // Pregunta si la casilla es una casilla ganadora
     public bool isWinningTile(Vector3 position)
     {
         Vector3 origin = new Vector3(position.x, 20f, position.z);

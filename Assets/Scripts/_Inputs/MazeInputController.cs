@@ -2,9 +2,10 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 
+// Controla los movimientos para cuando el jugador debe mover algún muro
 public class MazeInputController : MonoBehaviour
 {
-    [Header("Settings")]
+    [Header("Movable Layer Mask")]
     public LayerMask movableLayer;
 
     [Header("Visual Feedback")]
@@ -29,9 +30,11 @@ public class MazeInputController : MonoBehaviour
 
     void Start()
     {
+        // Configura el grid del tablero
         if(BoardManager.Instance != null) tileSize = BoardManager.Instance.tileSize;
         else tileSize = 2f;
 
+        // Configura el evento para cuando cambia el estado del juego
         if(GameManager.Instance != null) GameManager.Instance.OnGameStateChanged += HandleGameStateChanged;     
     }
 
@@ -42,12 +45,15 @@ public class MazeInputController : MonoBehaviour
 
     private void HandleGameStateChanged(GameState state)
     {
+        // Si el estado del juego es para mover un muro, inicializa el movimiento
         if(state == GameState.MoveWall) InitializeMoveState();
         else ExitMoveState();
     }
 
+
     private void InitializeMoveState()
     {
+        // Enciende el shader de selección en todos los muros
         if(BoardManager.Instance != null) BoardManager.Instance.ToggleHighlightMovableObjects(true);
         OnSelectionModeActive?.Invoke(true);
         isSelectionModeActive = true;
@@ -56,8 +62,9 @@ public class MazeInputController : MonoBehaviour
 
     private void ExitMoveState()
     {
+        // Apaga el shader de selección
         if(BoardManager.Instance != null) BoardManager.Instance.ToggleHighlightMovableObjects(false);
-        DestroyGhost();
+        DestroyGhost(); // Destruye el fantasma del muro que toma la posición inicial del muro
 
         OnSelectionModeActive?.Invoke(false);
         OnObjectSelected?.Invoke(false);
@@ -89,10 +96,11 @@ public class MazeInputController : MonoBehaviour
 
         if(selectedOcuppant == null)
         {
-            HandleSelection();
+            HandleSelection(); // Obliga al jugador a seleccionar un muro
         }
         else
         {
+            // Controla los movimientos del muro
             HandleMovement();
             HandleRotation();
             HandleConfirmation();
@@ -100,6 +108,7 @@ public class MazeInputController : MonoBehaviour
         }
     }
 
+    // Selección del muro por medio del mouse
     private void HandleSelection()
     {
         if (Input.GetMouseButtonDown(0))
@@ -117,12 +126,13 @@ public class MazeInputController : MonoBehaviour
     {
         selectedOcuppant = occupant;
 
+        // Guarda la posición y rotación original
         originalPosition = occupant.transform.position;
         originalRotation = occupant.transform.rotation;
 
-        CreateGhost(occupant);
+        CreateGhost(occupant); // Crea un fantasma del muro 
 
-        // Temporary unregister because avoid autocollisions
+        // Temporalmente desregistra al bloque del board para no preocuparse por colliders
         BoardManager.Instance.UnregisterOccupancy(occupant);
         selectedOcuppant.transform.position += Vector3.up * liftHeight;
 
@@ -140,11 +150,13 @@ public class MazeInputController : MonoBehaviour
 
     private void CreateGhost(GridOccupant original)
     {
+        // Instancia un fantasma del muro con su posición y rotación original
         currentGhost = new GameObject($"{original.name}_Ghost");
         currentGhost.transform.position = original.transform.position;
         currentGhost.transform.rotation = original.transform.rotation;
         currentGhost.transform.localScale = original.transform.localScale;
 
+        // Modifica el material del fanstasma
         MeshFilter originalFilter = original.GetComponentInChildren<MeshFilter>();
         if(originalFilter != null)
         {
@@ -165,6 +177,7 @@ public class MazeInputController : MonoBehaviour
         }
     }
 
+    // Controla el movimiento del muro
     private void HandleMovement()
     {
         Vector3 currentPos = selectedOcuppant.transform.position;
@@ -176,6 +189,7 @@ public class MazeInputController : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)){ targetPos.x += tileSize; inputDetected = true;}
         if(Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)){ targetPos.x -= tileSize; inputDetected = true;}
 
+        // Mueve el muro a dónde des click con el mouse
         if (Input.GetMouseButtonDown(0))
         {
             dragPlane = new Plane(Vector3.up, selectedOcuppant.transform.position);
@@ -189,6 +203,7 @@ public class MazeInputController : MonoBehaviour
             isDragginMouse = true;
         }
 
+        // Mueve el muro arrastrando el mouse
         if(Input.GetMouseButton(0) && isDragginMouse)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -213,6 +228,7 @@ public class MazeInputController : MonoBehaviour
 
         if(Input.GetMouseButtonUp(0)) isDragginMouse = false;
 
+        // Mueve el muro con las flechas del teclado
         if (inputDetected)
         {
             Vector3 previousPos = selectedOcuppant.transform.position;
@@ -231,25 +247,29 @@ public class MazeInputController : MonoBehaviour
         }
     }
 
+    // Rota el muro
     private void HandleRotation()
     {
         bool isRotated = false;
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space)) // Al presionar el botón de Space
         {
+            // No rota muros de 1x1
             if(selectedOcuppant.baseSize.x == 1 && selectedOcuppant.baseSize.y == 1)
             {
                 if(AudioManager.Instance != null) AudioManager.Instance.playToError();
                 return;
             }
 
+            // Rotación
             selectedOcuppant.transform.Rotate(0, 90, 0);
             isRotated = true;
 
             List<Vector3> potentialPoints = selectedOcuppant.GetOccupiedWorldCenters();
             
+            // Si la rotación se sale del límite del tablero
             if (!BoardManager.Instance.ArePointWithinBounds(potentialPoints))
             {
-                selectedOcuppant.transform.Rotate(0, -90, 0);
+                selectedOcuppant.transform.Rotate(0, -90, 0); // Regresa a la rotación original
                 isRotated = false;
             }
 
@@ -263,6 +283,8 @@ public class MazeInputController : MonoBehaviour
         }
     }
 
+    // Si es una posición disponible, el muro se pinta de verde
+    // Si es una posición no disponible, el muro se pinta de rojo
     private void UpdateVisualFeedback()
     {
         List<Vector3> currentPoints = selectedOcuppant.GetOccupiedWorldCenters();
@@ -270,6 +292,8 @@ public class MazeInputController : MonoBehaviour
         selectedOcuppant.SetMoveFeedbackState(isValid);
     }
 
+    // Valida que el muro este en una posición disponible
+    //  para colocarlo en ese lugar y lanza el canvas de configuración
     private void HandleConfirmation()
     {
         if(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
@@ -287,6 +311,7 @@ public class MazeInputController : MonoBehaviour
         }
     }
 
+    // Coloca el muro en la nueva posición y activa los shaders 
     private void ConfirmMove()
     {
         DestroyGhost();
@@ -319,6 +344,8 @@ public class MazeInputController : MonoBehaviour
         }
     }
 
+    // Al cancelar el movimiento, el muro regresa a su posición original y 
+    // todos los muros vuelven a estado de selección
     private void CancelMove()
     {
         DestroyGhost();

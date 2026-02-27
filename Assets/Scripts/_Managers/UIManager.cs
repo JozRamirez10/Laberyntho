@@ -268,6 +268,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // Forza la selección de un botón en el cambio de paneles
     private void ForceSelectButton(Button btnToSelect)
     {
         if(EventSystem.current != null && btnToSelect != null && btnToSelect.gameObject.activeInHierarchy && btnToSelect.interactable)
@@ -277,6 +278,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // Configura la UI para el minimapa
     private void ToggleCameraMode(bool isMapToggle)
     {
         if(isMapToggle) GameManager.Instance.UI_ToggleMapAction();
@@ -284,24 +286,28 @@ public class UIManager : MonoBehaviour
         RefreshUILayoutBasedOnCamera();
     }
 
+    // Configura la UI para la selección de bloques
     private void ToggleWallSelection(bool isActive)
     {
         if(selectionInstructions != null) selectionInstructions.SetActive(isActive);
         if(controlsInstructions != null) controlsInstructions.SetActive(!isActive);
     }
 
+    // Configura las instrucciones dependiendo de la acción del jugador al seleccionar 
+    // un muro
     private void ToggleWallControls(bool isObjectSelected)
     {
         if(controlsInstructions != null) controlsInstructions.SetActive(isObjectSelected);
         if(selectionInstructions != null) selectionInstructions.SetActive(!isObjectSelected);
     }
 
+    // Intercambio de UI entre lanzar el dado y acciones del jugador
     private void HandleGameStateChanged(GameState state)
     {
         isWaitingForRoll = (state == GameState.WaitingForRoll);
         isTurnPlanningOrResolving = (state == GameState.TurnPlanning || state == GameState.Moving || state == GameState.ResolvingTurn);
 
-        if (isWaitingForRoll)
+        if (isWaitingForRoll) // Animación de tirada del dado
         {
             UpdateTurnCounterUI();
             showingActionPhase = false;
@@ -310,7 +316,7 @@ public class UIManager : MonoBehaviour
             hasStartedCPU = false;
             isRollingDiceCPU = false;
         }
-        else if (isTurnPlanningOrResolving)
+        else if (isTurnPlanningOrResolving) // Fase de planear del jugador
         {
             UpdateTurnCounterUI();
             if(tpConfirmButton != null && state == GameState.TurnPlanning)
@@ -323,6 +329,7 @@ public class UIManager : MonoBehaviour
         RefreshUILayoutBasedOnCamera();
     }
 
+    // Intercambio de fase al iniciar el turno
     private void SwitchToActionsPhase()
     {
         showingActionPhase = true;
@@ -331,12 +338,14 @@ public class UIManager : MonoBehaviour
         ForceSelectButton(rollDiceButton);
     }
 
+    // Actualiza la UI en el inicio del turno
     private void UpdatePhaseVisibility()
     {
         if(phase1Container != null) phase1Container.SetActive(!showingActionPhase);
         if(phase2Container != null) phase2Container.SetActive(showingActionPhase);
     }
 
+    // Activa o desactiva los elementos dependiendo de la cámara y el modo
     public void RefreshUILayoutBasedOnCamera()
     {
         if(GameManager.Instance == null || GameManager.Instance.cameraManager == null) return;
@@ -418,6 +427,8 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // Actualiza la UI con los pasos usados y disponibles
+    // Cambia dependiendo de la cámara o modo de vista
     private void UpdateStepsUI(int remaining, int total)
     {
         if(stepsCounterText != null)
@@ -461,6 +472,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // Actualiza el número de llaves
     private void UpdateKeysUI(int keyCount)
     {
         if(keysCounterText != null)
@@ -469,6 +481,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // UI cuando el jugador gana una llave
     public void ShowKeyGainSequence(Action onComplete)
     {
         onKeyRewardComplete = onComplete;
@@ -490,6 +503,7 @@ public class UIManager : MonoBehaviour
         else onComplete?.Invoke();
     }
 
+    // Oculta el panel de la llave
     private void HideKeyReward()
     {
         if(keyRewardPanel != null) keyRewardPanel.SetActive(false);
@@ -498,6 +512,7 @@ public class UIManager : MonoBehaviour
         onKeyRewardComplete = null;
     }
 
+    // Animación de aparición del panel
     private IEnumerator AnimatePop(Transform target)
     {
         float timer = 0f;
@@ -517,6 +532,7 @@ public class UIManager : MonoBehaviour
         target.localScale = Vector3.one;
     }
 
+    // Actualiza la UI usando la información del jugador actual
     private void UpdatePlayerInfoUI(Player currentPlayer)
     {
         if(currentPlayer == null) return;
@@ -548,6 +564,7 @@ public class UIManager : MonoBehaviour
         if(topBannerNameText != null) topBannerNameText.text = turnText;
     }
 
+    // Actualiza el contador de turnos
     private void UpdateTurnCounterUI()
     {
         if(GameManager.Instance != null && globalTurnCounterText != null)
@@ -556,6 +573,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // Muestra el panel de confirmación de movimiento
     public void ShowMovementConfirmation(Action onConfirm, Action onCancel, string customMessage = null)
     {
         this.onPopupConfirmAction = onConfirm;
@@ -578,18 +596,21 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // Muestra el panel de confirmación del movimiento de un muro
     public void ShowWallMoveConfirmation(Action onConfirm, Action onCancel)
     {
         string message = "¿Confirmar nueva posición de muro?";
         ShowMovementConfirmation(onConfirm, onCancel, message);
     }
 
+    // Muesta el panel de confirmación de ataque del minotauro
     public void ShowAttackConfirmationUI(Action onConfirm, Action onCancel, string victimName)
     {
         string attackMessage = $"¿Seguro que quieres atacar a {victimName} y terminar el turno?";
         ShowMovementConfirmation(onConfirm, onCancel, attackMessage);
     }
 
+    // Oculta los paneles de confirmación
     private void HideConfirmationPopup()
     {
         if(confirmationPanel != null)
@@ -601,12 +622,14 @@ public class UIManager : MonoBehaviour
         RefreshUILayoutBasedOnCamera();
     }
 
+    // Deshabilita el panel de confirmación al terminar el frame (CPU)
     private System.Collections.IEnumerator DisablePopupFlagAtEndOfFrame()
     {
         yield return new WaitForEndOfFrame();
         if(confirmationPanel != null && !confirmationPanel.activeSelf) IsConfirmationPopupActive = false;
     }
 
+    // UI para el resultado del dado
     public IEnumerator ShowDiceResultRoutine(int number, float duration)
     {
         if(diceResultText != null && number != 6)
@@ -640,6 +663,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // UI cuando el jugador gana
     public void ShowWinScreen(Player winner)
     {
         if(victoryPanel != null) victoryPanel.SetActive(true);
@@ -651,7 +675,7 @@ public class UIManager : MonoBehaviour
         ForceSelectButton(restartButton);
     }
 
-    // CPU
+    // --- CPU ---
     private IEnumerator InitialStartCPU()
     {
         yield return new WaitForSeconds(2f);

@@ -1,5 +1,8 @@
 using UnityEngine;
 
+// Se usa un fantasma para moverse a través del tablero y hacia donde va es hacia dónde se instancian
+// las casillas fantasma
+// Se usa para que la cámara este visible a la altura del explorador
 public class GhostMovement : MonoBehaviour
 {
     public float moveSpeed = 8f;
@@ -44,10 +47,10 @@ public class GhostMovement : MonoBehaviour
 
         if (moveDir.magnitude > 0.1f)
         {
-            // Movemos usando el controlador físico
+            // Movimiento usando el controlador físico
             controller.Move(moveDir * moveSpeed * Time.deltaTime);
             
-            // Rotamos visualmente
+            // Rotación visual
             Quaternion toRotation = Quaternion.LookRotation(moveDir, Vector3.up);
             transform.rotation = Quaternion.Slerp(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
         }

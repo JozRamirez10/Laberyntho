@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections;
 
+// Controla la transparentación de la puerta 
+// y la animación de abrir y cerrar
 public class DoorController : MonoBehaviour
 {
     [System.Serializable]

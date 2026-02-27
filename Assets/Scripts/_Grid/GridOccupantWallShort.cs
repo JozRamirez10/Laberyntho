@@ -1,11 +1,9 @@
 using UnityEngine;
-using System.Collections.Generic; // 1. FALTABA ESTO
+using System.Collections.Generic;
 
-// 2. CAMBIO IMPORTANTE: Heredamos de GridOccupant, NO de MonoBehaviour
+// Para objetos de 1x1
 public class GridOccupantWallShort : GridOccupant 
 {
-    [Header("Dirección de Crecimiento")]
-    [Tooltip("X=1 (Derecha), X=-1 (Izquierda). Y=1 (Adelante), Y=-1 (Atrás). Ajusta esto según qué esquina sea tu pivote.")]
     public Vector2 growthDirection = new Vector2(1, -1); 
 
     public override List<Vector3> GetOccupiedWorldCenters()
@@ -20,8 +18,6 @@ public class GridOccupantWallShort : GridOccupant
         // Vectores de dirección
         Vector3 right = transform.right;
         Vector3 forward = transform.forward;
-
-        // --- CÁLCULO DIRECTO PARA PIVOTE EN VÉRTICE ---
         
         // Calculamos los offsets basándonos en la dirección que elegiste
         float xOffset = halfTile * growthDirection.x;
@@ -38,7 +34,7 @@ public class GridOccupantWallShort : GridOccupant
         return bluePoints;
     }
 
-    // Dibujamos un Gizmo especial para que veas la esquina y hacia dónde crece
+    // Dibujamos un Gizmo especial para que se vea la esquina y hacia dónde crece
     protected override void OnDrawGizmosSelected()
     {
         // Llamamos al base para que dibuje el punto azul y la caja cian
@@ -47,7 +43,7 @@ public class GridOccupantWallShort : GridOccupant
         var board = GetBoard();
         if (board == null) return;
 
-        // Dibujo extra: Una línea amarilla desde la esquina (Pivote) hasta el centro
+        //  Una línea amarilla desde la esquina (Pivote) hasta el centro
         if (growthDirection != Vector2.zero)
         {
             List<Vector3> points = GetOccupiedWorldCenters();
@@ -56,7 +52,7 @@ public class GridOccupantWallShort : GridOccupant
                 Gizmos.color = Color.yellow;
                 Gizmos.DrawLine(transform.position, points[0]);
                 
-                // Dibujar la esquina (Pivote real)
+                // Dibuja la esquina (Pivote real)
                 Gizmos.color = new Color(1f, 0.6f, 0f);
                 Gizmos.DrawSphere(transform.position, 0.1f);
             }

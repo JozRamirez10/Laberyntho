@@ -10,7 +10,6 @@ public abstract class Player : MonoBehaviour
     public Color playerColor = Color.white;
     public Vector3 startPosition {get; set;}
     public bool IsCPU;
-    // public bool IsCPU { get; protected set; }
 
     [Header("Components")]
     private Animator animator;
@@ -34,7 +33,7 @@ public abstract class Player : MonoBehaviour
     {
         this.startPosition = initialPos;
         this.IsCPU = isCPU;
-        InstantMoveTo(initialPos);
+        InstantMoveTo(initialPos); // Coloca al jugador en la poisicón inicial
     }
 
     protected virtual void Start()
@@ -57,23 +56,19 @@ public abstract class Player : MonoBehaviour
         if(iconGlowObject != null)
         {
             glowPulser = iconGlowObject.GetComponent<GlowPulserIcon>();
-            if(glowPulser != null)
-            {
-                glowPulser.SetGlowState(false, false);
-            }
-            else
-            {
-                iconGlowObject.SetActive(false);
-            }
+
+            if(glowPulser != null) glowPulser.SetGlowState(false, false);
+            else iconGlowObject.SetActive(false);
         }
     }
 
     public virtual void InstantMoveTo(Vector3 targetPos)
     {
-        SnapToGround(targetPos);
-        transform.LookAt(Vector3.zero);
+        SnapToGround(targetPos); // Ajusta al jugador al grid
+        transform.LookAt(Vector3.zero); // El jugador inicia viendo al centro del tablero
     }
 
+    // Define la vista del jugador
     public void LookAt(Vector3 targetPosition)
     {
         Vector3 direction = (targetPosition - transform.position).normalized;
@@ -84,35 +79,23 @@ public abstract class Player : MonoBehaviour
         }
     }
 
+    // Activa el pulso del icono del jugador
     public void ActiveGlow(bool enablePulse)
     {
-        if(glowPulser != null)
-        {
-            glowPulser.SetGlowState(true, enablePulse);
-        }else if(iconGlowObject != null && !enablePulse)
-        {
-            iconGlowObject.SetActive(true);
-        }
+        if(glowPulser != null) glowPulser.SetGlowState(true, enablePulse);
+        else if(iconGlowObject != null && !enablePulse) iconGlowObject.SetActive(true);
     }
 
     private void HandleTurnChanged(Player currentPlayer)
     {
+        // Modifica la animación del jugador dependiendo de si es su turno
         isItMyTurn = (currentPlayer == this);
-        if(animator != null)
-        {
-            animator.SetBool("isMyTurn", isItMyTurn);
-        }
+        if(animator != null) animator.SetBool("isMyTurn", isItMyTurn);
 
-        if (!isItMyTurn)
+        if (!isItMyTurn) // Desactiva el pulso y animación del icono del jugador
         {
-            if(glowPulser != null)
-            {
-                glowPulser.SetGlowState(false, false);
-            }
-            else if(iconGlowObject != null)
-            {
-                iconGlowObject.SetActive(false);
-            }
+            if(glowPulser != null) glowPulser.SetGlowState(false, false);
+            else if(iconGlowObject != null)iconGlowObject.SetActive(false);
         }
     }
 
@@ -140,6 +123,7 @@ public abstract class Player : MonoBehaviour
         }
     }
 
+    // Mueve al jugador del punto inicial al final
     public void Move(List<Vector3> finalPath, Action onMovementComplete)
     {
         if(finalPath == null || finalPath.Count == 0)
@@ -148,7 +132,8 @@ public abstract class Player : MonoBehaviour
             return;
         }
 
-        StartCoroutine(MovementRoutine(finalPath, onMovementComplete));
+        // Corrutina de movimiento
+        StartCoroutine(MovementRoutine(finalPath, onMovementComplete)); 
     }
 
     protected virtual IEnumerator PreStepCheck(Vector3 currentPos, Vector3 nextPos)
@@ -156,11 +141,12 @@ public abstract class Player : MonoBehaviour
         yield break;
     }
 
+    // Corrutina de movimiento
     protected IEnumerator MovementRoutine(List<Vector3> path, Action onComplete)
     {
         Debug.Log($"{characterName} comienza a moverse... ");
 
-        if(animator != null) animator.SetBool("isMoving", true);
+        if(animator != null) animator.SetBool("isMoving", true); // Animación de movimiento
 
         foreach(Vector3 targetStepPosFlat in path)
         {
@@ -171,6 +157,7 @@ public abstract class Player : MonoBehaviour
 
             Vector3 startStepPos = transform.position;
 
+            // El jugador siempre mira hacia donde camina
             Vector3 directionToLook = (targetStepPosFlat - new Vector3(startStepPos.x, 0, startStepPos.z)).normalized;
             Quaternion startRotation = transform.rotation;
 
@@ -179,14 +166,10 @@ public abstract class Player : MonoBehaviour
             {
                 targetRotation = Quaternion.LookRotation(directionToLook, Vector3.up);
             }
-            else
-            {
-                targetRotation = startRotation;
-            }
+            else targetRotation = startRotation;
 
             while(elapsedTime < timeToMove)
             {
-
                 elapsedTime += Time.deltaTime;
                 float percentageComplete = elapsedTime / timeToMove;
 
@@ -221,6 +204,7 @@ public abstract class Player : MonoBehaviour
         onComplete?.Invoke();
     }
 
+    // Ajusta al jugador al grid del tablero
     protected void SnapToGround(Vector3 targetPos)
     {
         RaycastHit hit;
@@ -229,10 +213,7 @@ public abstract class Player : MonoBehaviour
         {
             transform.position = hit.point;
         }
-        else
-        {
-            transform.position = new Vector3(targetPos.x, 0f, targetPos.z);
-        }
+        else transform.position = new Vector3(targetPos.x, 0f, targetPos.z);
     }
 
     void OnDestroy()
