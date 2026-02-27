@@ -48,14 +48,16 @@ public abstract class GridOccupant : MonoBehaviour
 
     protected virtual void Start()
     {
-        RegisterSelf();
+        RegisterSelf(); // Se registra asi mismo en el board
 
+        // Configura el material del objeto para usar shaders
         meshRenderer.GetPropertyBlock(propBlock);
         propBlock.SetFloat(selectablePropID, 0f);
         propBlock.SetFloat(dissolvePropID, 1f);
         meshRenderer.SetPropertyBlock(propBlock);
     }
 
+    // Aplica el shader de aparición del muro
     public IEnumerator AppearRoutine(float duration)
     {
         float elapsed = 0;
@@ -72,6 +74,7 @@ public abstract class GridOccupant : MonoBehaviour
         }
     }
 
+    // Efecto de disolución (shader)
     public void SetDissolveValule(float value)
     {
         if (meshRenderer == null) return;
@@ -80,12 +83,14 @@ public abstract class GridOccupant : MonoBehaviour
         meshRenderer.SetPropertyBlock(propBlock);
     }
 
+    // Se registra así mismo en el board
     public void RegisterSelf()
     {
         var board = GetBoard();
         if(board != null) board.RegisterOccupancy(this);
     }
 
+    // Desregistra asi mismo del board
     public void UnregisterSelf()
     {
         var board = GetBoard();
@@ -102,6 +107,7 @@ public abstract class GridOccupant : MonoBehaviour
         meshRenderer.SetPropertyBlock(propBlock);
     }
 
+    // Configura el material valido o inválido 
     public void SetMoveFeedbackState(bool isValid)
     {
         if(meshRenderer == null) return;
@@ -110,6 +116,7 @@ public abstract class GridOccupant : MonoBehaviour
         meshRenderer.material = isValid ? validMaterial : invalidMaterial;
     }
 
+    // Restaura el material original
     public void RestoreVisuals()
     {
         if(meshRenderer == null) return;
@@ -118,6 +125,7 @@ public abstract class GridOccupant : MonoBehaviour
         meshRenderer.material = originalMaterial;
     }
 
+    // (Debug) dibuja gizmos para saber el centro del objeto
     protected virtual void OnDrawGizmosSelected() 
     {
         var board = GetBoard();

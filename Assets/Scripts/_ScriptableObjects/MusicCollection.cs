@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 
+// Base de datos de los audios
 [CreateAssetMenu(fileName = "MusicCollection", menuName = "Scriptable Objects/MusicCollection")]
 public class MusicCollection : ScriptableObject
 {

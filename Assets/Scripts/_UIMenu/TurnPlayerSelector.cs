@@ -2,6 +2,8 @@ using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
 
+// Permite seleccionar el turno de los jugadores mediente DropDowns
+// y los actuliza en tiempo real
 public class TurnPlayerSelector : MonoBehaviour
 {
     [Header("Turn Dropdowns")]

@@ -2,7 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections;
 
-public class ExplorerPlayer : Player
+public class ExplorerPlayer : Player // Hereda de Player
 {
     [Header("Explorer Data")]
     [SerializeField] private int keysCollected = 0;
@@ -25,6 +25,8 @@ public class ExplorerPlayer : Player
         ResetVisuals();
     }
 
+    // Animación de partículas cuando el jugador vuelve a su posición original
+    // después de ser atacado por el minotauro
     public IEnumerator PlayRespawnSequence(Action onComplete)
     {
         float vfxDuration = 1.0f;
@@ -46,6 +48,7 @@ public class ExplorerPlayer : Player
         onComplete?.Invoke();
     }
 
+    // Animación de partículas (desintegración) cuando el jugador es atacado por el minotauro
     private GameObject SpawnVFX(GameObject prefab)
     {
         if(prefab != null)
@@ -62,6 +65,7 @@ public class ExplorerPlayer : Player
         return null;
     }
 
+    // Reproducción de muerte del jugador
     public void PlayDeathEffect()
     {
         if(AudioManager.Instance != null) AudioManager.Instance.playDiePlayer();
@@ -70,6 +74,7 @@ public class ExplorerPlayer : Player
         SetRenderersVisibility(false);
     }
 
+    // Regresa los objetos a su render original
     public void ResetVisuals()
     {
         SetRenderersVisibility(true);
@@ -92,6 +97,7 @@ public class ExplorerPlayer : Player
 
     public event Action<int> OnKeysChanged;
 
+    // Corrutina preparada para interactuar con las puertas
     protected override IEnumerator PreStepCheck(Vector3 currentPos, Vector3 nextPos)
     {
         Vector3 direction = (nextPos - currentPos).normalized;
@@ -103,12 +109,12 @@ public class ExplorerPlayer : Player
             DoorController door = hit.collider.GetComponent<DoorController>();
             if(door != null && !door.isOpen)
             {
-                Animator anim = GetComponentInChildren<Animator>();
-                if(anim != null) anim.SetBool("isMoving", false);
+                Animator anim = GetComponentInChildren<Animator>(); // Antes de abrir una puerta
+                if(anim != null) anim.SetBool("isMoving", false); // Se detiene
 
-                yield return StartCoroutine(door.OpenDoorRoutine());
+                yield return StartCoroutine(door.OpenDoorRoutine()); // Se abre la puerta
 
-                if(anim != null) anim.SetBool("isMoving", true);
+                if(anim != null) anim.SetBool("isMoving", true); // El jugador vuelva a caminar
             }
         }
     }

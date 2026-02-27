@@ -91,6 +91,7 @@ public class UIMenuManager : MonoBehaviour
 
     void Start()
     {
+        // Forza el botón principal del menú
         if(playButton != null) ForceSelectionButton(playButton);
     }
 
@@ -108,6 +109,7 @@ public class UIMenuManager : MonoBehaviour
         UpdateTextColors(currentSelected);
     }
 
+    // Quita toda la selección de colores de los botones
     private void ResetAllTextColors()
     {
         if (principalPanel.gameObject.activeInHierarchy)
@@ -154,6 +156,7 @@ public class UIMenuManager : MonoBehaviour
         }
     }
 
+    // Actualiza la selección de botones de acuerdo al panel y selección
     private void UpdateTextColors(GameObject selectedObj)
     {
         ResetAllTextColors();
@@ -202,6 +205,7 @@ public class UIMenuManager : MonoBehaviour
         }
     }
 
+    // Forza la selección de botones al pasar de un panel a otro
     private void ForceSelectionButton(Selectable btnToSelect)
     {
         if(EventSystem.current != null && btnToSelect != null && btnToSelect.gameObject.activeInHierarchy && btnToSelect.interactable)
@@ -241,6 +245,8 @@ public class UIMenuManager : MonoBehaviour
         ForceSelectionButton(player1InputText);
     }
 
+    // Comportamiento de checkbox de la selección de turnos random
+    // Modifica el panel de navagación
     public void turnPlayersToggle(bool toggle)
     {
         if(turnPlayersPanel != null) turnPlayersPanel.SetActive(!toggle);

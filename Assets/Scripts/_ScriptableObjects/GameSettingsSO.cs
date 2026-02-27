@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Configuración de la resolución, audio y velocidad del juego
 [CreateAssetMenu(fileName = "GameSettings", menuName = "Scriptable Objects/Game Settings")]
 public class GameSettingsSO : ScriptableObject
 {

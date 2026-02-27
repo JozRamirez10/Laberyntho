@@ -62,16 +62,15 @@ public class CameraManager : MonoBehaviour
 
     public event Action OnCameraModeChanged;
 
-    public void ToggleMapUI()
+    public void ToggleMapUI() // Vista superior
     {
         ToggleSpecialMode(GameState.Setup);
     }
 
-    public void ToggleFreeRoamUI()
+    public void ToggleFreeRoamUI() // Cámara libre
     {
         ToggleSpecialMode(GameState.FreeRoam);
     }
-
 
     void Awake()
     {
@@ -95,12 +94,11 @@ public class CameraManager : MonoBehaviour
         {
             Debug.Log("No se encontró la Main Camera");
         }
-
-        // ApplyCameraForState(currentGameState);
     }
 
     void Start()
     {
+        // Configura el NearClip de las cámaras
         SetCameraNearClipSettings(vcamTopDown, topDownNearClip);
         SetCameraNearClipSettings(vcamFaceToFace, faceToFaceNearClip);
         SetCameraNearClipSettings(vcamThirdPerson, thirPersonNearClip);
@@ -141,6 +139,7 @@ public class CameraManager : MonoBehaviour
 
         if(UIPauseManager.Instace.isPaused) return;
 
+        // Permite cambiar entre la cámara superior y la cámara libre
         if(GameManager.Instance.currentState == GameState.TurnPlanning)
         {
             if (Input.GetKeyDown(KeyCode.Q))
@@ -176,6 +175,7 @@ public class CameraManager : MonoBehaviour
         if(targetBrain != null) StartCoroutine(TemporaryBlendRoutine(duration));
     }
 
+    // Hace una transición suave entre el intercambio de cámaras
     private IEnumerator TemporaryBlendRoutine(float duration)
     {
         var blend = targetBrain.DefaultBlend;
@@ -193,6 +193,7 @@ public class CameraManager : MonoBehaviour
         targetBrain.DefaultBlend = blend;
     }
 
+    // Cámara para visualizar el tablero
     public void SetCameraBoard()
     {
         if (IsMapModeActive)
@@ -205,6 +206,7 @@ public class CameraManager : MonoBehaviour
         }
     }
 
+    // Cámara libre
     public void SetCameraFree()
     {
         if (IsFreeRoamActive)
@@ -217,6 +219,7 @@ public class CameraManager : MonoBehaviour
         }
     }
 
+    // Activa la cámara que apunta al minimapa
     private void SetMinimapActive(bool isActive)
     {
         if(minimapPhysicalCamera != null && minimapPhysicalCamera.gameObject.activeSelf != isActive)
@@ -233,6 +236,7 @@ public class CameraManager : MonoBehaviour
         vcam.Lens = lensSettings;
     }
 
+    // Establece la prioridad de las cámaras
     private void SetCameraPriorities(bool intro = false, bool topDown = false, bool faceToFace = false, bool thirdPerson = false, bool freeRoam = false, bool dice = false)
     {
         if(vcamIntro != null) vcamIntro.Priority = intro ? PRIORITY_HIGH : PRIORITY_LOW;
@@ -267,17 +271,21 @@ public class CameraManager : MonoBehaviour
         }
     }
 
+    // Actualiza la cámara a usar dependiendo del estado del juego
     private void ApplyCameraForState(GameState stateToApply)
     {
+        // Habilita los iconos en la cámara
         bool showIcons = (stateToApply == GameState.Setup || stateToApply == GameState.MoveWall);
         UPdateMainCameraIconVisibility(showIcons);
 
         if(uRPCuller != null)
         {
+            // Habilita el culler dependiendo del estado del juego
             bool enableCulling = (stateToApply != GameState.Setup && stateToApply != GameState.MoveWall && stateToApply != GameState.Intro);
             uRPCuller.enabled = enableCulling;
         }
         
+        // Configuración para la cámara del CPU
         bool isTurnCPU = false;
         if(GameManager.Instance != null) isTurnCPU = GameManager.Instance.isTurnCPU;
 
@@ -295,6 +303,7 @@ public class CameraManager : MonoBehaviour
         }
     }
 
+    // Alinea la cámara cuando el jugador mueve al fantasma
     private void HandlePhantomTargetChanged(Transform newTarget)
     {
         if (mainCamPhysical != null && targetSmoother != null)
@@ -312,20 +321,21 @@ public class CameraManager : MonoBehaviour
         if (targetSmoother != null) targetSmoother.SetTarget(newTarget);
     }
 
+    // La cámara enfoca al jugador actual
     private void HandleTurnChanged(Player currentPlayer)
     {
         if (currentPlayer == null) return;
-        // UpdateAllCameraTargets(currentPlayer.transform);
         SetCameraTarget(currentPlayer.transform);
     }
 
+    // La cámara enfoca el transform de un objeto
     private void HandleFocusUnitChanged(Transform transform)
     {
         if(transform == null) return;
-        // UpdateAllCameraTargets(transform);
         SetCameraTarget(transform);
     }
 
+    // La cámara apunta a un target
     public void SetCameraTarget(Transform targetTransform)
     {
         currentPlayerTarget = targetTransform;
@@ -346,6 +356,7 @@ public class CameraManager : MonoBehaviour
         if(vcamMiniMap != null) vcamMiniMap.Target.TrackingTarget = currentPlayerTarget;
     }
 
+    // Decida si la cámara se mueve de forma suave o si debe hacer un corte brusco
     private void HandleGameStateChanged(GameState state)
     {
         if(state == GameState.Moving && activeSpecialMode != null) activeSpecialMode = null;
@@ -359,6 +370,7 @@ public class CameraManager : MonoBehaviour
         else ApplyCameraForState(currentGameState);
     }
 
+    // Intercambio de cámaras de acuerdo al estado del juego
     private void ToggleSpecialMode(GameState targetMode)
     {
         if(isTransitioning) return;
@@ -421,6 +433,7 @@ public class CameraManager : MonoBehaviour
         ApplyCameraForState(currentGameState);
     }
 
+    // Transición de corte entre cámaras
     private IEnumerator PerformCutTransitionRoutine(GameState targetState)
     {
         isTransitioning = true;
@@ -449,12 +462,12 @@ public class CameraManager : MonoBehaviour
         isTransitioning = false;
     }
 
-    // Transición de Deslizamiento (Solo para Mapa)
+    // Transición de Deslizamiento 
     private IEnumerator DoSlideTransitionRoutine(GameState targetState, bool isEntering)
     {
         isTransitioning = true;
         
-        // 1. Captura de pantalla
+        // Captura de pantalla 
         if(targetBrain != null)
         {
             var mainCam = targetBrain.GetComponent<Camera>();
@@ -463,7 +476,7 @@ public class CameraManager : MonoBehaviour
             mainCam.targetTexture = null;
         }
 
-        // 2. Preparar UI
+        // Preparar UI
         RectTransform slideRect = slidingImage.rectTransform;
 
         float screenWidth = Screen.width;
@@ -483,7 +496,7 @@ public class CameraManager : MonoBehaviour
 
         transitionCanvas.SetActive(true);
 
-        // 3. Corte instantáneo de cámara
+        // Corte instantáneo de cámara
         if(targetBrain != null)
         {
             var blend = targetBrain.DefaultBlend;
@@ -491,13 +504,13 @@ public class CameraManager : MonoBehaviour
             targetBrain.DefaultBlend = blend;
         }
 
-        // 4. Cambiar estado de cámara
+        // Cambiar estado de cámara
         currentGameState = targetState;
         ApplyCameraForState(currentGameState);
 
         yield return null;
 
-        // 5. Restaurar blend time
+        // Restaurar blend time
         if(targetBrain != null)
         {
             var blend = targetBrain.DefaultBlend;
@@ -505,7 +518,7 @@ public class CameraManager : MonoBehaviour
             targetBrain.DefaultBlend = blend;
         }
 
-        // 6. Animación UI
+        // Animación UI
         float elapsedTime = 0f;
 
         while(elapsedTime < slideDuration)
@@ -522,6 +535,7 @@ public class CameraManager : MonoBehaviour
         isTransitioning = false;
     }
 
+    // Actualiza si la cámara puede ver los iconos
     private void UPdateMainCameraIconVisibility(bool showIcons)
     {
         if(mainCamPhysical == null) return;
@@ -529,6 +543,7 @@ public class CameraManager : MonoBehaviour
         else mainCamPhysical.cullingMask = defaultMainCamMask & ~mapIconsLayerMask;
     }
 
+    // Forza la vista superior
     public void ForceTopDownView(bool enabled)
     {
         if (enabled)
