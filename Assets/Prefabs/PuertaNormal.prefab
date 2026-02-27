@@ -99,7 +99,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: b809db52816584e3ab4a88d5affec4d3, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -8.2
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b809db52816584e3ab4a88d5affec4d3, type: 3}
       propertyPath: m_LocalPosition.y
@@ -107,7 +107,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b809db52816584e3ab4a88d5affec4d3, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -4.9
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b809db52816584e3ab4a88d5affec4d3, type: 3}
       propertyPath: m_LocalRotation.w
@@ -237,6 +237,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b809db52816584e3ab4a88d5affec4d3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7200315366165379715}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b809db52816584e3ab4a88d5affec4d3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7571764864278638250}
   m_SourcePrefab: {fileID: 100100000, guid: b809db52816584e3ab4a88d5affec4d3, type: 3}
 --- !u!1 &1485809862996895008 stripped
 GameObject:
@@ -308,6 +311,26 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &7571764864278638250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1485809862996895008}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bf94f27651c449c6bacd21da1adb626, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GridOccupantWallShort
+  baseSize: {x: 1, y: 1}
+  isMovable: 0
+  isWinZone: 0
+  meshRenderer: {fileID: 0}
+  validMaterial: {fileID: 0}
+  invalidMaterial: {fileID: 0}
+  selectableMaterial: {fileID: 0}
+  growthDirection: {x: -0.8, y: 0}
 --- !u!4 &2293872205836320666 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b809db52816584e3ab4a88d5affec4d3, type: 3}

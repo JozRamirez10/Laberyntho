@@ -105,7 +105,7 @@ MonoBehaviour:
   baseColor: {r: 1, g: 0.8, b: 0, a: 1}
   pulseSpeed: 4
   minIntensity: 0
-  maxIntensity: 4
+  maxIntensity: 2
   colorPropertyName: _EmissionColor
 --- !u!1 &3912026301334254973
 GameObject:
@@ -312,6 +312,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 04a74630fb98a4b10a176e0c1d90feaa, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3484107938586171897}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 04a74630fb98a4b10a176e0c1d90feaa, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6309344242117079992}
   m_SourcePrefab: {fileID: 100100000, guid: 04a74630fb98a4b10a176e0c1d90feaa, type: 3}
 --- !u!1 &466451736457943544 stripped
 GameObject:
@@ -332,11 +335,36 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MinotaurPlayer
   characterName: Minotaur
   playerColor: {r: 0.2924528, g: 0.28003737, b: 0.28003737, a: 1}
+  IsCPU: 0
   iconGlowObject: {fileID: 2016603639786433947}
   groundLayer:
     serializedVersion: 2
     m_Bits: 128
   rotationSpeed: 360
+  roarBool: isAttacking
+  postRoarWaitTime: 0.5
+  preRespawnCameraDelay: 1
+  startRotation: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6309344242117079992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 466451736457943544}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bf94f27651c449c6bacd21da1adb626, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GridOccupantWallShort
+  baseSize: {x: 1, y: 1}
+  isMovable: 0
+  isWinZone: 0
+  meshRenderer: {fileID: 0}
+  validMaterial: {fileID: 0}
+  invalidMaterial: {fileID: 0}
+  selectableMaterial: {fileID: 0}
+  growthDirection: {x: 0, y: 0}
 --- !u!4 &951099335972537154 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 04a74630fb98a4b10a176e0c1d90feaa, type: 3}

@@ -92,3 +92,6 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   rotationSpeed: 360
+  roarBool: isAttacking
+  postRoarWaitTime: 0.5
+  preRespawnCameraDelay: 1

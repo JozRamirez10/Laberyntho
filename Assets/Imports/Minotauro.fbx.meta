@@ -3,7 +3,62 @@ guid: 04a74630fb98a4b10a176e0c1d90feaa
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Diamond
+    second: {fileID: 2100000, guid: 3b059736e7c9d43908cf2784b708046f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Gold
+    second: {fileID: 2100000, guid: 4e016ca55c0e94815aa5b067cefb96f0, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Metal
+    second: {fileID: 2100000, guid: cb1a7b0b7444e498ca55cac6a2403e32, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Metal Desgastado
+    second: {fileID: 2100000, guid: 0d77515e7223741988bd68dee6882686, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Minotauro
+    second: {fileID: 2100000, guid: ff0233563e61f4c7299e419b69394377, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Red Diamond
+    second: {fileID: 2100000, guid: 42da1b78a38014c44941ea0349aecc36, type: 2}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: MaterialUvs5
+    second: {fileID: 2800000, guid: 0b84e0027cb2243cebd4db98d5890209, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: ScratchesLight001_NRM_1K
+    second: {fileID: 2800000, guid: 4f719489d24ec42da9a85d3d068c022d, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: diamond_red_Metallic
+    second: {fileID: 2800000, guid: e6cf0289d47354a91801d7946b1d5d6d, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: diamond_red_Nrm
+    second: {fileID: 2800000, guid: b27fbb8290a544801832b6e67c1cb750, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: diamond_red_Rgh
+    second: {fileID: 2800000, guid: 6f27acc10ac96485194065f68a22b54b, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -102,17 +157,24 @@ ModelImporter:
       hasAdditiveReferencePose: 0
       loopTime: 0
       loopBlend: 0
-      loopBlendOrientation: 0
+      loopBlendOrientation: 1
       loopBlendPositionY: 0
       loopBlendPositionXZ: 0
-      keepOriginalOrientation: 0
+      keepOriginalOrientation: 1
       keepOriginalPositionY: 1
       keepOriginalPositionXZ: 0
       heightFromFeet: 0
       mirror: 0
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
-      events: []
+      events:
+      - time: 0.31034943
+        functionName: PlayRoarSFX
+        data: 
+        objectReferenceParameter: {instanceID: 0}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
       transformMask: []
       maskType: 3
       maskSource: {instanceID: 0}

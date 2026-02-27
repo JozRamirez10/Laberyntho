@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09ae8b6ef7a814961b04812259b9d339, type: 3}
+  m_Name: MusicCollection
+  m_EditorClassIdentifier: Assembly-CSharp::MusicCollection
+  musicMenu: {fileID: 8300000, guid: 53a6319cb52ed4f2c90487b2808f6b66, type: 3}
+  musicGame: {fileID: 0}
+  musicMinotaur: {fileID: 0}
+  musicWin: {fileID: 0}
+  musicLoose: {fileID: 0}
+  sfxSelect: {fileID: 8300000, guid: fd56c2c0d03894553b190d5ed137990d, type: 3}
+  sfxConfirm: {fileID: 8300000, guid: 4f6221b8254c84b6d8725a1335ad8770, type: 3}
+  sfxBack: {fileID: 8300000, guid: fd86618099b80473d8c99e41be1fc05d, type: 3}
+  sfxError: {fileID: 8300000, guid: e85726100a5ad468ea0f02718b734759, type: 3}
+  startTurn: {fileID: 8300000, guid: 4de2f9d769169452da3ab9951dce059d, type: 3}
+  throwDice: {fileID: 0}
+  winKey: {fileID: 8300000, guid: 8fef08e77a5aa491bbff560d11490941, type: 3}
+  spendKey: {fileID: 8300000, guid: 8999df4b910f14969af85b05641b694c, type: 3}
+  openDoor: {fileID: 8300000, guid: a81f2bb544c014350af252f0790782ba, type: 3}
+  creakingDoor: {fileID: 8300000, guid: e136794c37f054984a81e895a6c3ba30, type: 3}
+  closeDoor: {fileID: 8300000, guid: 15548dcab96354dde8ecdaea728ed47b, type: 3}
+  confirmAttack: {fileID: 8300000, guid: 2fe677312efb44d94b11d76fae81a939, type: 3}
+  stepsPlayer: {fileID: 8300000, guid: bedd78cc6e9f74bf399f24dd1291311e, type: 3}
+  diePlayer: {fileID: 8300000, guid: 92e1e28e552f14d4a9264035ca186798, type: 3}
+  rebirthPlayer: {fileID: 8300000, guid: 4e88ba627ea3241b1b18d567185bdb80, type: 3}
+  stepsMinotaur: {fileID: 8300000, guid: 316b2757707914dfd8b61de36bd0b78a, type: 3}
+  roarMinotaur: {fileID: 8300000, guid: 85bdbeb3a6037434aad667906229d84b, type: 3}
+  setWall: {fileID: 8300000, guid: 8adb2a334be44493a86319e862941a99, type: 3}
+  rotateWall: {fileID: 8300000, guid: 147ec94ca616e4961980eda37b1c68ee, type: 3}
