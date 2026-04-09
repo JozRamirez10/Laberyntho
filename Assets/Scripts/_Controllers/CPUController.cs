@@ -45,7 +45,7 @@ public class CPUController : MonoBehaviour
     // Define el comportamiento con respecto al resultado del dado y el turno del minotauro
     public void StartTurn(Player playerToMove, int stepsAvailable, bool isMinotaurTurn, Action onTurnComplete) 
     {
-        if(stepsAvailable == 7) StartCoroutine(HandleWallMoveTurn(playerToMove, onTurnComplete));
+        if(stepsAvailable == 8) StartCoroutine(HandleWallMoveTurn(playerToMove, onTurnComplete));
         else StartCoroutine(ExecuteTurnRoutine(playerToMove, stepsAvailable, isMinotaurTurn, onTurnComplete));
     }
 
@@ -84,65 +84,71 @@ public class CPUController : MonoBehaviour
         
         if(fullPath == null || fullPath.Count == 0) 
         {
-            if (GameManager.Instance.cameraManager != null) GameManager.Instance.cameraManager.ForceTopDownView(false);
-            onTurnComplete?.Invoke(); 
-            yield break; 
-        }
-
-        // Recorta la ruta con los pasos disponibles
-        int stepsToTake = Mathf.Min(stepsAvailable, fullPath.Count);
-        List<Vector3> finalPath = fullPath.GetRange(0, stepsToTake);
-
-        // Le avisamos al inputController que colocaremos fantasmas
-        GameManager.Instance.inputController.StartTurnPlanning(playerToMove, stepsAvailable, isMinotaurTurn);
-
-        // Forzamos que la posición inicial de referencia para los fantasmas 
-        // esté alineada al grid. Si el minotauro está en el centro (0,0,0), esto evitará 
-        // que el primer cálculo de dirección sea diagonal.
-        Vector3 currentPhantomPosReference = GetSnappedPosition(playerToMove.transform.position);
-        currentPhantomPosReference.y = 0.05f; 
-
-        bool eventTriggered = false;
-
-        foreach (Vector3 nextStepPos in finalPath) 
-        {
+            GameManager.Instance.inputController.StartTurnPlanning(playerToMove, stepsAvailable, isMinotaurTurn);
+            
             yield return new WaitForSeconds(stepSelectionDelay);
-            
-            // Obtiene la posición del paso
-            Vector3 targetVisualPos = new Vector3(nextStepPos.x, 0.05f, nextStepPos.z);
-            
-            // Calculamos la dirección usando la referencia alineada
-            Vector3 direction = (targetVisualPos - currentPhantomPosReference).normalized;
-            
-            // Si la dirección es oblicua por errores de precisión, forzamos ejes cardinales
-            if (Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
-                direction = new Vector3(Mathf.Sign(direction.x), 0, 0);
-            else
-                direction = new Vector3(0, 0, Mathf.Sign(direction.z));
 
-            if (direction == Vector3.zero) direction = playerToMove.transform.forward;
-
-            // Instancia el fantasma
-            GameManager.Instance.inputController.SimulateCPUStep(targetVisualPos, direction);
-            
-            // Actualizamos la referencia para el siguiente fantasma
-            currentPhantomPosReference = targetVisualPos;
-
-            // Revisa si aparecio el panel de confirmación
-            if (UIManager.Instance != null && UIManager.Instance.confirmationPanel.activeSelf) 
-            {
-                eventTriggered = true;
-                break;
-            }
-        }
-
-        yield return new WaitForSeconds(thinkingTime);
-
-        // Si no ha aparecido el panel de confirmación, lanza la confirmación
-        if (!eventTriggered) 
-        {
             GameManager.Instance.inputController.ConfirmMovement();
-            yield return new WaitForSeconds(0.6f); 
+
+            yield return new WaitForSeconds(1f);
+        }
+        else
+        {
+            // Recorta la ruta con los pasos disponibles
+            int stepsToTake = Mathf.Min(stepsAvailable, fullPath.Count);
+            List<Vector3> finalPath = fullPath.GetRange(0, stepsToTake);
+
+            // Le avisamos al inputController que colocaremos fantasmas
+            GameManager.Instance.inputController.StartTurnPlanning(playerToMove, stepsAvailable, isMinotaurTurn);
+
+            // Forzamos que la posición inicial de referencia para los fantasmas 
+            // esté alineada al grid. Si el minotauro está en el centro (0,0,0), esto evitará 
+            // que el primer cálculo de dirección sea diagonal.
+            Vector3 currentPhantomPosReference = GetSnappedPosition(playerToMove.transform.position);
+            currentPhantomPosReference.y = 0.05f; 
+
+            bool eventTriggered = false;
+
+            foreach (Vector3 nextStepPos in finalPath) 
+            {
+                yield return new WaitForSeconds(stepSelectionDelay);
+                
+                // Obtiene la posición del paso
+                Vector3 targetVisualPos = new Vector3(nextStepPos.x, 0.05f, nextStepPos.z);
+                
+                // Calculamos la dirección usando la referencia alineada
+                Vector3 direction = (targetVisualPos - currentPhantomPosReference).normalized;
+                
+                // Si la dirección es oblicua por errores de precisión, forzamos ejes cardinales
+                if (Mathf.Abs(direction.x) > Mathf.Abs(direction.z))
+                    direction = new Vector3(Mathf.Sign(direction.x), 0, 0);
+                else
+                    direction = new Vector3(0, 0, Mathf.Sign(direction.z));
+
+                if (direction == Vector3.zero) direction = playerToMove.transform.forward;
+
+                // Instancia el fantasma
+                GameManager.Instance.inputController.SimulateCPUStep(targetVisualPos, direction);
+                
+                // Actualizamos la referencia para el siguiente fantasma
+                currentPhantomPosReference = targetVisualPos;
+
+                // Revisa si aparecio el panel de confirmación
+                if (UIManager.Instance != null && UIManager.Instance.confirmationPanel.activeSelf) 
+                {
+                    eventTriggered = true;
+                    break;
+                }
+            }
+
+            yield return new WaitForSeconds(thinkingTime);
+
+            // Si no ha aparecido el panel de confirmación, lanza la confirmación
+            if (!eventTriggered) 
+            {
+                GameManager.Instance.inputController.ConfirmMovement();
+                yield return new WaitForSeconds(0.6f); 
+            }
         }
 
         // Simula presionar el botón de confirmación
