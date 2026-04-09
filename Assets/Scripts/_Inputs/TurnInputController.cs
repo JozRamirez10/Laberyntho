@@ -87,7 +87,8 @@ public class TurnInputController : MonoBehaviour
     {
         if(!isPlanning) return;
 
-        if(UIPauseManager.Instace.isPaused) return;
+        bool isCPU = false;
+        if(GameManager.Instance != null) isCPU = GameManager.Instance.isTurnCPU;
 
         if(UIManager.Instance != null && UIManager.Instance.IsConfirmationPopupActive) return;
 
@@ -96,23 +97,27 @@ public class TurnInputController : MonoBehaviour
         GameState currentState = GameManager.Instance.currentState;
         if(currentState != GameState.TurnPlanning) return;
 
-        if(stepsRemaining > 0 || pathPositions.Count > 0)
+        if(InputManager.Instance != null)
         {
-            // Moverse usando flechas
-            if(Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) TryAddStep(GetCameraRelativeDirection(Vector3.forward));
-            if(Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) TryAddStep(GetCameraRelativeDirection(Vector3.left));
-            if(Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) TryAddStep(GetCameraRelativeDirection(Vector3.right));
-
-            // Retroceder
-            if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
+            if((stepsRemaining > 0 || pathPositions.Count > 0) && !isCPU)
             {
-                if(cameraManager != null && cameraManager.IsMapModeActive) TryAddStep(GetCameraRelativeDirection(Vector3.back));
-                else UndoLastStep(); // Deshace el último movimiento
-            }
-        }     
+                // Moverse
+                if(InputManager.Instance.IsUpPressed) TryAddStep(GetCameraRelativeDirection(Vector3.forward));
+                if(InputManager.Instance.IsLeftPressed) TryAddStep(GetCameraRelativeDirection(Vector3.left));
+                if(InputManager.Instance.IsRightPressed) TryAddStep(GetCameraRelativeDirection(Vector3.right));
 
-        // Confirmar movimiento
-        if(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) ConfirmMovement();
+                // Retroceder
+                if (InputManager.Instance.IsDownPressed)
+                {
+                    if(cameraManager != null && cameraManager.IsMapModeActive) TryAddStep(GetCameraRelativeDirection(Vector3.back));
+                    else UndoLastStep(); // Deshace el último movimiento
+                }
+            }     
+
+            // Confirmar movimiento
+            if(InputManager.Instance.IsConfirmPressed && !isCPU) ConfirmMovement();
+        }
+
     }
 
     // La cámara se mueve relativo al frente del jugador
@@ -439,7 +444,7 @@ public class TurnInputController : MonoBehaviour
     // Confirmación del movimiento
     public void ConfirmMovement()
     {
-        if(stepsRemaining > 0) return;
+        if(stepsRemaining > 0 && stepsRemaining != totalStepsAvailable) return;
 
         if(cameraManager != null) cameraManager.ForceTopDownView(true);
 
@@ -464,7 +469,11 @@ public class TurnInputController : MonoBehaviour
 
         Action showMovementPopup = () =>
         {
-            UIManager.Instance.ShowMovementConfirmation(onFinalConfirm, onCancelCommon);
+            string customMsg = (stepsRemaining == totalStepsAvailable) 
+            ? "¿Estás seguro de terminar tu turno sin moverte?"
+            : null;
+
+            UIManager.Instance.ShowMovementConfirmation(onFinalConfirm, onCancelCommon, customMsg);
         };
 
         // Si el jugador cruzo puertas, te muestra un mensaje para preguntar si estás seguro
@@ -523,9 +532,17 @@ public class TurnInputController : MonoBehaviour
 
         GameManager.Instance.playerIsHeadingToWin = false;
 
-        // Reproduce la animación de movimiento
-        this.currentPlayer.Move(new List<Vector3>(this.pathPositions), GameManager.Instance.EndMovementState);
-        this.pathPositions.Clear();
+        if(this.pathPositions.Count == 0)
+        {
+            GameManager.Instance.NexTurn();
+        }
+        else
+        {
+            // Reproduce la animación de movimiento
+            this.currentPlayer.Move(new List<Vector3>(this.pathPositions), GameManager.Instance.EndMovementState);
+            this.pathPositions.Clear();
+        }
+
     }
 
     // Deshace el último movimiento 
