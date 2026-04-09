@@ -1,10 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using TMPro;
 using UnityEngine.SceneManagement;
 
-public class UIMenuManager : MonoBehaviour
+public class UIMenuManager : UIBaseManager
 {
     public static UIMenuManager Instance {get; private set;}
 
@@ -78,8 +77,6 @@ public class UIMenuManager : MonoBehaviour
     public Button returnCreditsButton;
     public TextMeshProUGUI returnCreditsText;
 
-    private GameObject lastSelectObject;
-
     [Header("GameSettingsSO")]
     public GameSettingsSO gameSettingsSO;
 
@@ -89,24 +86,22 @@ public class UIMenuManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    void Start()
+    protected override void Start()
     {
+        base.Start();
+        
         // Forza el botón principal del menú
-        if(playButton != null) ForceSelectionButton(playButton);
+        if(playButton != null) ForceSelectButton(playButton);
     }
 
-    void Update()
+    protected override void Update()
     {
-        GameObject currentSelected = EventSystem.current.currentSelectedGameObject;
-        if(currentSelected == null || currentSelected == lastSelectObject) return;
-        
-        if(!Input.GetButtonDown("Submit") && AudioManager.Instance != null && lastSelectObject != null)
-        {
-            AudioManager.Instance.playToSelect();    
-        }
+        base.Update();
+    }
 
-        lastSelectObject = currentSelected;
-        UpdateTextColors(currentSelected);
+    protected override void OnSelectionChanged(GameObject selectedObject)
+    {
+        UpdateTextColors(selectedObject);
     }
 
     // Quita toda la selección de colores de los botones
@@ -189,7 +184,7 @@ public class UIMenuManager : MonoBehaviour
             if(selectedObj == returnOptionsButton.gameObject) returnOptionsText.color = activeSelectionColor;
         }
 
-        if (audioPanel.gameObject.activeInHierarchy)
+        if (screenPanel.gameObject.activeInHierarchy)
         {
             if(selectedObj == returnScreenButton.gameObject) returnScreenText.color = activeSelectionColor;
         }
@@ -205,17 +200,6 @@ public class UIMenuManager : MonoBehaviour
         }
     }
 
-    // Forza la selección de botones al pasar de un panel a otro
-    private void ForceSelectionButton(Selectable btnToSelect)
-    {
-        if(EventSystem.current != null && btnToSelect != null && btnToSelect.gameObject.activeInHierarchy && btnToSelect.interactable)
-        {
-            EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(btnToSelect.gameObject);
-            UpdateTextColors(btnToSelect.gameObject);
-        }
-    }
-
     public void drawMenuPrincipalPanel()
     {
         gamemodePanel.SetActive(false);
@@ -223,7 +207,7 @@ public class UIMenuManager : MonoBehaviour
         creditsPanel.SetActive(false);
 
         principalPanel.SetActive(true);
-        ForceSelectionButton(playButton);
+        ForceSelectButton(playButton);
     }
 
     public void drawGameModePanel()
@@ -233,7 +217,7 @@ public class UIMenuManager : MonoBehaviour
         principalPanel.SetActive(false);
         playersPanel.SetActive(false);
         gamemodePanel.SetActive(true);
-        ForceSelectionButton(classicGameButton);
+        ForceSelectButton(classicGameButton);
     }
 
     public void drawPlayersPanel()
@@ -242,7 +226,7 @@ public class UIMenuManager : MonoBehaviour
 
         gamemodePanel.SetActive(false);
         playersPanel.SetActive(true);
-        ForceSelectionButton(player1InputText);
+        ForceSelectButton(player1InputText);
     }
 
     // Comportamiento de checkbox de la selección de turnos random
@@ -289,7 +273,7 @@ public class UIMenuManager : MonoBehaviour
         screenPanel.SetActive(false);
         audioPanel.SetActive(false);
         optionsPanel.SetActive(true);
-        ForceSelectionButton(screenButton); 
+        ForceSelectButton(screenButton); 
     }
 
     public void drawScreenPanel()
@@ -298,7 +282,7 @@ public class UIMenuManager : MonoBehaviour
 
         optionsPanel.SetActive(false);
         screenPanel.SetActive(true);
-        ForceSelectionButton(resolutionDropDown);
+        ForceSelectButton(resolutionDropDown);
     }
 
     public void drawAudioPanel()
@@ -307,7 +291,7 @@ public class UIMenuManager : MonoBehaviour
 
         optionsPanel.SetActive(false);
         audioPanel.SetActive(true);
-        ForceSelectionButton(musicSlider);
+        ForceSelectButton(musicSlider);
     }
 
     public void drawCreditsPanel()
@@ -316,7 +300,7 @@ public class UIMenuManager : MonoBehaviour
         
         principalPanel.SetActive(false);
         creditsPanel.SetActive(true);
-        ForceSelectionButton(returnCreditsButton);
+        ForceSelectButton(returnCreditsButton);
     }
 
     public void LoadAudioSliderSettings()

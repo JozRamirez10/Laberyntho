@@ -4,11 +4,14 @@ using UnityEngine.EventSystems;
 using TMPro;
 using UnityEngine.SceneManagement;
 
-public class UIPauseManager : MonoBehaviour
+public class UIPauseManager : UIBaseManager
 {
-    public static UIPauseManager Instace {get; private set;}
+    public static UIPauseManager Instance {get; private set;}
 
     public bool isPaused {get; private set;} = false;
+
+    private float lastPauseToggleTime;
+    private const float PAUSE_COOLDOWN = 0.25f;
 
     [Header("Panels")]
     public GameObject principalPanel;
@@ -63,38 +66,55 @@ public class UIPauseManager : MonoBehaviour
     [Header("GameSettingSO")]
     public GameSettingsSO gameSettingsSO;
 
-    private GameObject lastSelectedObject;
-
     void Awake()
     {
-        if(Instace == null) Instace = this;
+        if(Instance == null) Instance = this;
         else { Destroy(gameObject); return;}
 
         if(principalPanel != null) principalPanel.SetActive(false);
         Time.timeScale = gameSettingsSO.speedGame;
     }
 
-    void Start()
+    protected override void Start()
     {
+        base.Start();
+
         LoadAudioSliderSettings(); // Configura los sliders del volumen
     }
 
-    void Update()
+    protected override void Update()
     {
         // Si se presiona el botón [ESC] activa el menú de pausa
-        if (Input.GetKeyDown(KeyCode.Escape)) TogglePause();
-
-        if(isPaused && EventSystem.current.currentSelectedGameObject != lastSelectedObject)
+        if (InputManager.Instance != null && InputManager.Instance.IsPausePressed 
+            && verifyScene() && verifyState())
         {
-            if(EventSystem.current.currentSelectedGameObject != null)
+            if(Time.unscaledTime - lastPauseToggleTime >= PAUSE_COOLDOWN)
             {
-                if(AudioManager.Instance != null) AudioManager.Instance.playToSelect();
-                
-                lastSelectedObject = EventSystem.current.currentSelectedGameObject;
-
-                UpdateTextColors(lastSelectedObject); 
+                lastPauseToggleTime = Time.unscaledTime;
+                TogglePause();
             }
         }
+
+        if(isPaused) base.Update();
+    }
+
+    private bool verifyScene()
+    {
+        string currentSceneName = SceneManager.GetActiveScene().name;
+        if(currentSceneName == Scenes.MENU) return false;
+        return true;
+    }
+
+    private bool verifyState()
+    {
+        if(GameManager.Instance != null 
+            && GameManager.Instance.currentState == GameState.GameOver) return false;
+        return true;
+    }
+
+    protected override void OnSelectionChanged(GameObject selectedObject)
+    {
+        UpdateTextColors(selectedObject);
     }
 
     public void TogglePause()
@@ -107,6 +127,11 @@ public class UIPauseManager : MonoBehaviour
     {
         isPaused = true;
         Time.timeScale = 0f;
+
+        if(EventSystem.current != null)
+        {
+            EventSystem.current.sendNavigationEvents = true;
+        }
 
         if(principalPanel != null) principalPanel.SetActive(true);
         if(AudioManager.Instance != null) AudioManager.Instance.playToConfirm();
@@ -124,21 +149,19 @@ public class UIPauseManager : MonoBehaviour
 
         Time.timeScale = gameSettingsSO.speedGame;
 
-        EventSystem.current.SetSelectedGameObject(null);
+        ClearFocus();
+
+        if(UIManager.Instance != null)
+        {
+            UIManager.Instance.RestoreLastFocus();
+        }
+
+        if(EventSystem.current != null && GameManager.Instance != null)
+        {
+            EventSystem.current.sendNavigationEvents = !GameManager.Instance.isTurnCPU;
+        }
 
         if(AudioManager.Instance != null) AudioManager.Instance.playToBack();
-    }
-
-    // Forza la selección de botones al pasar de un panel a otro
-    private void ForceSelectionButton(Selectable btnToSelect)
-    {
-        if(EventSystem.current != null && btnToSelect != null && btnToSelect.gameObject.activeInHierarchy && btnToSelect.interactable)
-        {
-            EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(btnToSelect.gameObject);
-            UpdateTextColors(btnToSelect.gameObject);
-            lastSelectedObject = btnToSelect.gameObject;
-        }
     }
 
     // Quita toda la selección de colores de los botones
@@ -202,14 +225,14 @@ public class UIPauseManager : MonoBehaviour
 
         if (resetPanel.gameObject.activeInHierarchy)
         {
-            if(selectedObj == confirmResetButton.gameObject) confirmResetText.color = disableSelectionColor;
-            if(selectedObj == cancelResetButton) cancelResetText.color = disableSelectionColor;
+            if(selectedObj == confirmResetButton.gameObject) confirmResetText.color = activeSelectionColor;
+            if(selectedObj == cancelResetButton.gameObject) cancelResetText.color = activeSelectionColor;
         }
 
         if (exitPanel.gameObject.activeInHierarchy)
         {
-            if(selectedObj == confirmExitButton) confirmExitText.color = disableSelectionColor;
-            if(selectedObj == cancelExitButton) cancelExitText.color = disableSelectionColor;
+            if(selectedObj == confirmExitButton.gameObject) confirmExitText.color = activeSelectionColor;
+            if(selectedObj == cancelExitButton.gameObject) cancelExitText.color = activeSelectionColor;
         }
     }
 
@@ -235,35 +258,35 @@ public class UIPauseManager : MonoBehaviour
         exitPanel.SetActive(false);
 
         pausePanel.SetActive(true);
-        ForceSelectionButton(backtoGameButton);
+        ForceSelectButton(backtoGameButton);
     }
 
     public void DrawScreenPanel()
     {
         pausePanel.SetActive(false);
         screenPanel.SetActive(true);
-        ForceSelectionButton(resolutionDropDown);
+        ForceSelectButton(resolutionDropDown);
     }
 
     public void DrawAudioPanel()
     {
         pausePanel.SetActive(false);
         audioPanel.SetActive(true);
-        ForceSelectionButton(musicSlider);
+        ForceSelectButton(musicSlider);
     }
 
     public void DrawResetPanel()
     {
         pausePanel.SetActive(false);
         resetPanel.SetActive(true);
-        ForceSelectionButton(cancelResetButton);
+        ForceSelectButton(cancelResetButton);
     }
 
     public void DrawExitPanel()
     {
         pausePanel.SetActive(false);
         exitPanel.SetActive(true);
-        ForceSelectionButton(cancelExitButton);
+        ForceSelectButton(cancelExitButton);
     }
 
     // Configura los sliders de volumen

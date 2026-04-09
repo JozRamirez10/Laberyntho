@@ -1,11 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using UnityEngine.EventSystems;
+using TMPro;
 using System;
 using System.Collections;
 
-public class UIManager : MonoBehaviour
+public class UIManager : UIBaseManager
 {
     public static UIManager Instance { get; private set;}
 
@@ -103,8 +103,6 @@ public class UIManager : MonoBehaviour
 
     private ExplorerPlayer currentExplorer;
 
-    private GameObject lastSelectObject;
-
     public bool IsConfirmationPopupActive {get; private set;} = false;
 
     // CPU
@@ -117,8 +115,10 @@ public class UIManager : MonoBehaviour
         else { Destroy(gameObject); return;}
     }
 
-    void Start()
+    protected override void Start()
     {
+        base.Start();
+
         if(confirmationText != null)
         {
             defaultConfirmationMessage = confirmationText.text;
@@ -224,9 +224,9 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    void Update()
+    protected override void Update()
     {
-        if(UIPauseManager.Instace.isPaused) return;
+        if(UIPauseManager.Instance != null && UIPauseManager.Instance.isPaused) return;
 
         if (isWaitingForRoll && centerViewLayer != null && centerViewLayer.activeSelf && phase1Container != null && phase1Container.activeSelf)
         {
@@ -237,7 +237,7 @@ public class UIManager : MonoBehaviour
                     hasStartedCPU = true;
                     StartCoroutine(InitialStartCPU());
                 } 
-                else if(Input.GetButtonDown("Submit") || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+                else if(!GameManager.Instance.isTurnCPU && InputManager.Instance.IsConfirmPressed)
                 {
                     initialStartButton.onClick.Invoke();
                 }
@@ -248,33 +248,19 @@ public class UIManager : MonoBehaviour
         bool isPopupActive = (confirmationPanel != null && confirmationPanel.activeSelf);
         bool isVictoryActive = (victoryPanel != null &&  victoryPanel.activeSelf);
 
+        bool isKeyRewardActive = (keyRewardPanel != null && keyRewardPanel.activeSelf);
+
         if (isDicePhaseActive && GameManager.Instance != null && GameManager.Instance.isTurnCPU && !isRollingDiceCPU)
         {
             isRollingDiceCPU = true;
             StartCoroutine(RollDiceActionCPU());
         }
 
-        if (isDicePhaseActive || isPopupActive || isVictoryActive)
+        if (isDicePhaseActive || isPopupActive || isVictoryActive || isKeyRewardActive
+            || GameManager.Instance.currentState == GameState.TurnPlanning
+            || GameManager.Instance.currentState == GameState.WaitingForRoll)
         {
-            GameObject currentSelected = EventSystem.current.currentSelectedGameObject;
-            if(currentSelected == null || currentSelected == lastSelectObject) return;
-
-            if(!Input.GetButtonDown("Submit") && AudioManager.Instance != null && lastSelectObject != null)
-            {
-                AudioManager.Instance.playToSelect();
-            }
-
-            lastSelectObject = currentSelected;
-        }
-    }
-
-    // Forza la selección de un botón en el cambio de paneles
-    private void ForceSelectButton(Button btnToSelect)
-    {
-        if(EventSystem.current != null && btnToSelect != null && btnToSelect.gameObject.activeInHierarchy && btnToSelect.interactable)
-        {
-            EventSystem.current.SetSelectedGameObject(null);
-            EventSystem.current.SetSelectedGameObject(btnToSelect.gameObject);
+            base.Update();
         }
     }
 
@@ -448,12 +434,16 @@ public class UIManager : MonoBehaviour
             bool isStrictlyPlanning = (GameManager.Instance.currentState == GameState.TurnPlanning);
             if(!isStrictlyPlanning || !tpConfirmButton.gameObject.activeSelf) return;
 
-            bool canConfirm = (remaining == 0 && total > 0);
+            bool hasNotMoved = (remaining == total && total > 0);
+            bool hasFinishedMoves = (remaining == 0 && total > 0);
+
+            bool canConfirm = hasNotMoved || hasFinishedMoves;
             tpConfirmButton.interactable = canConfirm;
             tpConfirmImage.color = canConfirm ? confirmTextActiveColor : confirmTextDisabledColor;
             
             if(tpConfirmButtonText != null)
             {
+                tpConfirmButtonText.text = hasNotMoved ? "Terminar el turno" : "Confirmar Movimiento";
                 tpConfirmButtonText.color = canConfirm ? confirmTextActiveColor : confirmTextDisabledColor;
             }
 
@@ -462,6 +452,10 @@ public class UIManager : MonoBehaviour
                 if(EventSystem.current.currentSelectedGameObject != tpConfirmButton.gameObject)
                 {
                     ForceSelectButton(tpConfirmButton);
+                }
+                
+                if (hasFinishedMoves)
+                {
                     if(AudioManager.Instance != null) AudioManager.Instance.playToConfirm();
                 }
             }
@@ -506,7 +500,14 @@ public class UIManager : MonoBehaviour
     // Oculta el panel de la llave
     private void HideKeyReward()
     {
+        StartCoroutine(HideRewardRoutine());
+    }
+
+    private IEnumerator HideRewardRoutine()
+    {
         if(keyRewardPanel != null) keyRewardPanel.SetActive(false);
+
+        yield return new WaitForSeconds(0.15f);
 
         onKeyRewardComplete?.Invoke();
         onKeyRewardComplete = null;
@@ -536,6 +537,12 @@ public class UIManager : MonoBehaviour
     private void UpdatePlayerInfoUI(Player currentPlayer)
     {
         if(currentPlayer == null) return;
+
+        // Si el turno actual es del CPU, deshabilita la navegación del UI
+        if(EventSystem.current != null)
+        {
+            EventSystem.current.sendNavigationEvents = !currentPlayer.IsCPU;
+        }
 
         if(currentExplorer != null)
         {
@@ -626,17 +633,19 @@ public class UIManager : MonoBehaviour
     private System.Collections.IEnumerator DisablePopupFlagAtEndOfFrame()
     {
         yield return new WaitForEndOfFrame();
+        yield return null;
+
         if(confirmationPanel != null && !confirmationPanel.activeSelf) IsConfirmationPopupActive = false;
     }
 
     // UI para el resultado del dado
     public IEnumerator ShowDiceResultRoutine(int number, float duration)
     {
-        if(diceResultText != null && number != 6)
+        if(diceResultText != null && number != 7)
         {
-            if(number <= 5) diceResultText.text = $"Muévete {number} unidades";
-            if(number == 7) diceResultText.text = "¡Mueve un muro!";
-            if(number == 8) diceResultText.text = "¡Mueve al Minotauro!";
+            if(number <= 6) diceResultText.text = $"Muévete {number} unidades";
+            if(number == 8) diceResultText.text = "¡Mueve un muro!";
+            if(number == 9) diceResultText.text = "¡Mueve al Minotauro!";
 
             diceResultText.gameObject.SetActive(true);
 
@@ -671,6 +680,12 @@ public class UIManager : MonoBehaviour
         if(victoryWinnerText != null) victoryWinnerText.text = $"¡{winner.characterName} ha ganado!";
 
         if(victoryStage != null) victoryStage.SetupWinner(winner);
+
+        // Habilita la navegación, por si era turno del CPU
+        if(EventSystem.current != null)
+        {
+            EventSystem.current.sendNavigationEvents = true;
+        }
 
         ForceSelectButton(restartButton);
     }
