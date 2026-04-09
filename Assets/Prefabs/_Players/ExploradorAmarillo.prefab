@@ -374,4 +374,5 @@ MonoBehaviour:
   invalidMaterial: {fileID: 0}
   selectablePropertyName: _IsSelectable
   dissolvePropertyName: _DissolveAmount
+  hoveredPropertyName: _IsHovered
   growthDirection: {x: 0, y: 0}
