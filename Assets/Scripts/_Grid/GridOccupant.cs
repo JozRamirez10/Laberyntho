@@ -19,6 +19,7 @@ public abstract class GridOccupant : MonoBehaviour
     [Header("Shader Properties")]
     public string selectablePropertyName = "_IsSelectable";
     public string dissolvePropertyName = "_DissolveAmount";
+    public string hoveredPropertyName = "_IsHovered";
     
     private Material originalMaterial;
     private bool isVisualOverridden = false;
@@ -26,6 +27,7 @@ public abstract class GridOccupant : MonoBehaviour
     private MaterialPropertyBlock propBlock;
     private int selectablePropID;
     private int dissolvePropID;
+    private int hoveredPropID;
 
 
     public abstract List<Vector3> GetOccupiedWorldCenters();
@@ -44,6 +46,7 @@ public abstract class GridOccupant : MonoBehaviour
         propBlock = new MaterialPropertyBlock();
         selectablePropID = Shader.PropertyToID(selectablePropertyName);
         dissolvePropID = Shader.PropertyToID(dissolvePropertyName);
+        hoveredPropID = Shader.PropertyToID(hoveredPropertyName);
     }
 
     protected virtual void Start()
@@ -54,6 +57,7 @@ public abstract class GridOccupant : MonoBehaviour
         meshRenderer.GetPropertyBlock(propBlock);
         propBlock.SetFloat(selectablePropID, 0f);
         propBlock.SetFloat(dissolvePropID, 1f);
+        propBlock.SetFloat(hoveredPropID, 0f);
         meshRenderer.SetPropertyBlock(propBlock);
     }
 
@@ -104,6 +108,16 @@ public abstract class GridOccupant : MonoBehaviour
 
         meshRenderer.GetPropertyBlock(propBlock);
         propBlock.SetFloat(selectablePropID, isSelectable ? 1.0f : 0.0f);
+        meshRenderer.SetPropertyBlock(propBlock);
+    }
+
+    public void SetHoverState(bool isHovered)
+    {
+        if(meshRenderer == null || !isMovable) return;
+        if(isVisualOverridden) return;
+
+        meshRenderer.GetPropertyBlock(propBlock);
+        propBlock.SetFloat(hoveredPropID, isHovered ? 1.0f : 0.0f);
         meshRenderer.SetPropertyBlock(propBlock);
     }
 
