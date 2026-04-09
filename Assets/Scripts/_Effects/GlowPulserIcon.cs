@@ -18,7 +18,7 @@ public class GlowPulserIcon : MonoBehaviour
     private int colorPropID;
     private int isPulsingID;
 
-    // Optiene las propiedades del material y los shaders
+    // Obtiene las propiedades del material y los shaders
     void Awake() 
     {
         targetRenderers = GetComponentsInChildren<Renderer>();

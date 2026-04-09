@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using System;
 using System.Linq;
+using System.Collections;
 
 public class MenuManager : MonoBehaviour
 {
@@ -24,6 +25,11 @@ public class MenuManager : MonoBehaviour
     [Header("UI Nav")]
     public TMP_Dropdown fourthDropdown;
     public Button returnButton;
+
+    [Header("Loading Scene")]
+    public GameObject playersPanel;
+    public GameObject loadingPanel;
+    public TextMeshProUGUI loadingText;
 
     private Color disableColor = new Color(0.5f, 0.5f, 0.5f, 1f);
     private Color activeColor = Color.white;
@@ -159,7 +165,41 @@ public class MenuManager : MonoBehaviour
         if (gameplaySetupSO.playerRandomOrder) setupSuccesful = SetupRandomGame();
         else setupSuccesful = SetupManualGame();
 
-        if (setupSuccesful && nameSceneToPlay != null) SceneManager.LoadScene(nameSceneToPlay);
+        if (setupSuccesful && nameSceneToPlay != null)
+        {
+            StartCoroutine(LoadSceneAsyncCoroutine(nameSceneToPlay));
+        }
+    }
+
+    private IEnumerator LoadSceneAsyncCoroutine(string sceneName)
+    {
+        if(playersPanel != null) playersPanel.SetActive(false);
+        if(loadingPanel != null) loadingPanel.SetActive(true);
+        if(startGameButton != null) startGameButton.interactable = false;
+
+        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
+
+        string baseText = "Cargando";
+        int dots = 0;
+        float dotTimer = 0f;
+
+        while (!asyncLoad.isDone)
+        {
+            dotTimer += Time.deltaTime;
+            if(dotTimer >= 0.3f)
+            {
+                dotTimer = 0f;
+                dots = (dots + 1) % 4;
+
+                string dotString = new string('.', dots);
+
+                if(loadingText != null)
+                {
+                    loadingText.text = baseText + dotString;
+                }
+            }
+            yield return null;
+        }
     }
 
     // Configura el turno de los jugadores de forma manual

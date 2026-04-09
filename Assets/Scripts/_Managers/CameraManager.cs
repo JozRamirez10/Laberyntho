@@ -6,6 +6,8 @@ using System;
 
 public class CameraManager : MonoBehaviour
 {
+    public static CameraManager Instance {get; private set;}
+
     [Header("Cinemachine Cameras")]
     public CinemachineCamera vcamIntro;
     public CinemachineCamera vcamTopDown;
@@ -74,6 +76,9 @@ public class CameraManager : MonoBehaviour
 
     void Awake()
     {
+        if(Instance == null) Instance = this;
+        else Destroy(gameObject);
+
         GameManager.Instance.OnTurnChanged += HandleTurnChanged;
         GameManager.Instance.OnGameStateChanged += HandleGameStateChanged;
 
@@ -137,18 +142,20 @@ public class CameraManager : MonoBehaviour
     {
         if(isTransitioning) return;
 
-        if(UIPauseManager.Instace.isPaused) return;
+        if(UIPauseManager.Instance.isPaused) return;
+
+        if(GameManager.Instance != null && GameManager.Instance.isTurnCPU) return;
 
         // Permite cambiar entre la cámara superior y la cámara libre
-        if(GameManager.Instance.currentState == GameState.TurnPlanning)
+        if(GameManager.Instance.currentState == GameState.TurnPlanning && InputManager.Instance != null)
         {
-            if (Input.GetKeyDown(KeyCode.Q))
+            if (InputManager.Instance.IsToggleMapPressed)
             {
                 SetCameraBoard();
                 AudioManager.Instance.playToConfirm();
             }
 
-            if (Input.GetKeyDown(KeyCode.E))
+            if (InputManager.Instance.IsToggleFreeCamPressed)
             {
                 SetCameraFree();
                 AudioManager.Instance.playToConfirm();

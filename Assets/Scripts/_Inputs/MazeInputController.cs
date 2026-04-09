@@ -1,5 +1,7 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 // Controla los movimientos para cuando el jugador debe mover algún muro
@@ -24,6 +26,9 @@ public class MazeInputController : MonoBehaviour
     
     private float tileSize;
     private float liftHeight = 0.5f;
+
+    private List<GridOccupant> selectableWalls = new List<GridOccupant>();
+    private GridOccupant hoveredOccupant = null;
 
     public event Action<bool> OnSelectionModeActive;
     public event Action<bool> OnObjectSelected;
@@ -50,14 +55,57 @@ public class MazeInputController : MonoBehaviour
         else ExitMoveState();
     }
 
-
     private void InitializeMoveState()
     {
         // Enciende el shader de selección en todos los muros
         if(BoardManager.Instance != null) BoardManager.Instance.ToggleHighlightMovableObjects(true);
+
+        RefreshSelectableWalls();
+
         OnSelectionModeActive?.Invoke(true);
         isSelectionModeActive = true;
         selectedOcuppant = null;
+
+        if (GameManager.Instance != null && GameManager.Instance.isTurnCPU) return;
+
+        if(selectableWalls.Count > 0)
+        {
+            StartCoroutine(InitialWarpRoutine());
+        } 
+    }
+
+    private IEnumerator InitialWarpRoutine()
+    {
+        yield return new WaitForEndOfFrame();
+        yield return new WaitForEndOfFrame();
+
+        GridOccupant centerWall = GetCenterMostWall();
+        if(centerWall != null) SetHoveredOccupant(centerWall, true);
+    }
+
+    private GridOccupant GetCenterMostWall()
+    {
+        GridOccupant bestMatch = null;
+        float minDistance = float.MaxValue;
+
+        Vector2 screenCenter = new Vector2(Screen.width / 2f, Screen.height / 2f);
+
+        foreach(var wall in selectableWalls)
+        {
+            Vector3 screenPos = Camera.main.WorldToScreenPoint(wall.transform.position);
+
+            if(screenPos.z < 0) continue;
+
+            Vector2 wallScreenPos = new Vector2(screenPos.x, screenPos.y);
+
+            float dist = Vector2.Distance(screenCenter, wallScreenPos);
+            if(dist < minDistance)
+            {
+                minDistance = dist;
+                bestMatch = wall;
+            }
+        }
+        return bestMatch;
     }
 
     private void ExitMoveState()
@@ -66,11 +114,14 @@ public class MazeInputController : MonoBehaviour
         if(BoardManager.Instance != null) BoardManager.Instance.ToggleHighlightMovableObjects(false);
         DestroyGhost(); // Destruye el fantasma del muro que toma la posición inicial del muro
 
+        if(hoveredOccupant != null) hoveredOccupant.SetHoverState(false);
+
         OnSelectionModeActive?.Invoke(false);
         OnObjectSelected?.Invoke(false);
 
         isSelectionModeActive = false;
         selectedOcuppant = null;
+        hoveredOccupant = null;
     }
 
     void OnEnable()
@@ -88,11 +139,14 @@ public class MazeInputController : MonoBehaviour
 
     void Update()
     {
+
         if(UIManager.Instance != null && UIManager.Instance.IsConfirmationPopupActive) return;
 
         if(GameManager.Instance.currentState != GameState.MoveWall) return;
 
-        if(UIPauseManager.Instace.isPaused) return;
+        if (UIPauseManager.Instance.isPaused) return;
+
+        if(GameManager.Instance != null && GameManager.Instance.isTurnCPU) return;
 
         if(selectedOcuppant == null)
         {
@@ -108,13 +162,111 @@ public class MazeInputController : MonoBehaviour
         }
     }
 
-    // Selección del muro por medio del mouse
+    // Construye una lista con todos los muros seleccionables
+    private void RefreshSelectableWalls()
+    {
+        selectableWalls.Clear();
+        GridOccupant[] allOcuppants = FindObjectsByType<GridOccupant>(FindObjectsSortMode.None);
+        foreach(var occ in allOcuppants)
+        {
+            if(occ.isMovable && occ.gameObject.activeInHierarchy) selectableWalls.Add(occ);
+        }
+    }
+
+    // Actualiza el hover y transporta el cursor
+    private void SetHoveredOccupant(GridOccupant hover, bool warpCursor = false)
+    {
+        bool isNewHover = (hoveredOccupant != hover);
+
+        if(hoveredOccupant != null && isNewHover) hoveredOccupant.SetHoverState(false);
+        
+        hoveredOccupant = hover;
+
+        if(hoveredOccupant != null)
+        {
+            if(isNewHover && AudioManager.Instance != null) AudioManager.Instance.playToSelect();
+            if(isNewHover) hoveredOccupant.SetHoverState(true);
+        }
+    }
+
+    // Selecciona el muro dependiendo de la dirección
+    private GridOccupant GetNextWallInDirection(Vector3 direction)
+    {
+        GridOccupant bestMatch = null;
+        float minDistance = float.MaxValue;
+
+        foreach(var wall in selectableWalls)
+        {
+            if(wall == hoveredOccupant || wall == null) continue;
+
+            Vector3 dirToWall = (wall.transform.position - hoveredOccupant.transform.position).normalized;
+            float dot = Vector3.Dot(direction, dirToWall);
+
+            // Si esta aproximadamente en la dirección que el jugador presiono
+            if(dot > 0.5f)
+            {
+                float dist = Vector3.Distance(hoveredOccupant.transform.position, wall.transform.position);
+                if(dist < minDistance)
+                {
+                    minDistance = dist;
+                    bestMatch = wall;
+                }
+            }
+        }
+        return bestMatch;
+    }
+
+    // Selección del muro
     private void HandleSelection()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (InputManager.Instance.isUsingMouseInput)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if(Physics.Raycast(ray, out RaycastHit hit, 100f, movableLayer))
+            if(Physics.Raycast(ray, out RaycastHit overHit, 100f, movableLayer))
+            {
+                GridOccupant occupant = overHit.collider.GetComponentInParent<GridOccupant>();
+                
+                if(occupant != null && occupant.isMovable) SetHoveredOccupant(occupant, false);
+                else SetHoveredOccupant(null, false);
+            }
+        }
+        
+        // Selección con teclas
+        Vector3 inputDir = Vector3.zero;
+        if (InputManager.Instance.IsUpPressed) inputDir = Vector3.forward;
+        if (InputManager.Instance.IsDownPressed) inputDir = Vector3.back;
+        if (InputManager.Instance.IsRightPressed) inputDir = Vector3.right;
+        if (InputManager.Instance.IsLeftPressed) inputDir = Vector3.left;
+
+        if(inputDir != Vector3.zero)
+        {
+            if(hoveredOccupant != null)
+            {
+                GridOccupant nextWall = GetNextWallInDirection(inputDir);
+                if(nextWall != null) SetHoveredOccupant(nextWall, true);
+            }
+            else
+            {
+                GridOccupant centerWall = GetCenterMostWall();
+                if(centerWall != null) SetHoveredOccupant(centerWall, true);
+            }
+
+        }
+
+        if(InputManager.Instance.IsConfirmPressed)
+        {
+            if(hoveredOccupant != null)
+            {
+                SelectedObject(hoveredOccupant);
+                return;
+            }
+        }
+
+        // Selección con el mouse
+        if (Input.GetMouseButtonDown(0))
+        {
+            Ray clickRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if(Physics.Raycast(clickRay, out RaycastHit hit, 100f, movableLayer))
             {
                 GridOccupant occupant = hit.collider.GetComponentInParent<GridOccupant>();
                 if(occupant != null && occupant.isMovable) SelectedObject(occupant);
@@ -124,6 +276,10 @@ public class MazeInputController : MonoBehaviour
 
     private void SelectedObject(GridOccupant occupant)
     {
+        // Limpia el efecto de selección antes de guardar la posición original
+        if(hoveredOccupant != null) hoveredOccupant.SetHoverState(false);
+        hoveredOccupant = null;
+
         selectedOcuppant = occupant;
 
         // Guarda la posición y rotación original
@@ -184,10 +340,10 @@ public class MazeInputController : MonoBehaviour
         Vector3 targetPos = currentPos;
         bool inputDetected = false;
 
-        if(Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)){ targetPos.z += tileSize; inputDetected = true; }
-        if(Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)){ targetPos.z -= tileSize; inputDetected = true;}
-        if(Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)){ targetPos.x += tileSize; inputDetected = true;}
-        if(Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)){ targetPos.x -= tileSize; inputDetected = true;}
+        if(InputManager.Instance.IsUpPressed){ targetPos.z += tileSize; inputDetected = true; }
+        if(InputManager.Instance.IsDownPressed){ targetPos.z -= tileSize; inputDetected = true;}
+        if(InputManager.Instance.IsRightPressed){ targetPos.x += tileSize; inputDetected = true;}
+        if(InputManager.Instance.IsLeftPressed){ targetPos.x -= tileSize; inputDetected = true;}
 
         // Mueve el muro a dónde des click con el mouse
         if (Input.GetMouseButtonDown(0))
@@ -251,7 +407,7 @@ public class MazeInputController : MonoBehaviour
     private void HandleRotation()
     {
         bool isRotated = false;
-        if (Input.GetKeyDown(KeyCode.Space)) // Al presionar el botón de Space
+        if (InputManager.Instance.IsRotatePressed) 
         {
             // No rota muros de 1x1
             if(selectedOcuppant.baseSize.x == 1 && selectedOcuppant.baseSize.y == 1)
@@ -296,8 +452,10 @@ public class MazeInputController : MonoBehaviour
     //  para colocarlo en ese lugar y lanza el canvas de configuración
     private void HandleConfirmation()
     {
-        if(Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+        if(InputManager.Instance.IsConfirmPressed)
         {
+            if(UIManager.Instance != null && UIManager.Instance.IsConfirmationPopupActive) return;
+
             List<Vector3> currentPoints = selectedOcuppant.GetOccupiedWorldCenters();
             bool isValid = BoardManager.Instance.IsAreaFree(currentPoints, selectedOcuppant);
 
@@ -306,6 +464,8 @@ public class MazeInputController : MonoBehaviour
                 if(UIManager.Instance != null) 
                     UIManager.Instance.ShowWallMoveConfirmation(ConfirmMove, null);
                 else ConfirmMove();
+
+                if(AudioManager.Instance != null) AudioManager.Instance.playToConfirm();
             }
             else if(AudioManager.Instance != null) AudioManager.Instance.playToError();
         }
@@ -338,7 +498,7 @@ public class MazeInputController : MonoBehaviour
 
     private void HandleCancellation()
     {
-        if(Input.GetKeyDown(KeyCode.E) || Input.GetMouseButtonDown(1))
+        if(InputManager.Instance.IsCancelPressed)
         {
             CancelMove();
         }
@@ -360,7 +520,11 @@ public class MazeInputController : MonoBehaviour
             BoardManager.Instance.RegisterOccupancy(selectedOcuppant);
             BoardManager.Instance.ToggleHighlightMovableObjects(true);
         }
+        GridOccupant canceledOccupant = selectedOcuppant;
         selectedOcuppant = null;
+
+        RefreshSelectableWalls();
+        SetHoveredOccupant(canceledOccupant, true);
 
         if(AudioManager.Instance != null) AudioManager.Instance.playToBack();
 

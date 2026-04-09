@@ -102,6 +102,9 @@ public class GameManager : MonoBehaviour
     {
         yield return null;
         StartGameFromTimelineSignal();
+        
+        if(gameplaySetupSO != null) gameplaySetupSO.ResetData();
+        
     }
 
     public void StartGameFromTimelineSignal()
@@ -191,9 +194,8 @@ public class GameManager : MonoBehaviour
         currenPlayerIndex = (currenPlayerIndex + 1) % players.Count;
 
         // Obtiene la instancia del jugador actual
-        Player currentPlayer = players[currenPlayerIndex]; 
-        if(currentPlayer.IsCPU) isTurnCPU = true; // Valida si es CPU
-        else isTurnCPU = false;
+        Player currentPlayer = players[currenPlayerIndex];
+        isTurnCPU = currentPlayer.IsCPU;
 
         Debug.Log($"Turno de: {currentPlayer.characterName}");
 
@@ -236,7 +238,8 @@ public class GameManager : MonoBehaviour
         // int diceResult = UnityEngine.Random.Range(1, 9); // 1 a 8
         
         // El juego va de 3 a 8 para agilizar movimientos
-        int diceResult = UnityEngine.Random.Range(3, 9); // 3 a 8
+        int diceResult = UnityEngine.Random.Range(3, 10); // 3 a 9
+        // diceResult = 6;
 
         Debug.Log($"Resultado del dado: {diceResult}");
 
@@ -272,12 +275,12 @@ public class GameManager : MonoBehaviour
         Player currentPlayer = players[this.currenPlayerIndex];
 
         isMinotaurTurn = false;
-        bool isWinningKey = (diceResult == 6);
-        bool isMovingWall = (diceResult == 7);
+        bool isWinningKey = (diceResult == 7);
+        bool isMovingWall = (diceResult == 8);
 
         if (isWinningKey) // Ganar una llave
         {
-            currentState = GameState.ResolvingTurn;
+            currentState = GameState.Rolling;
 
             // Se visualiza la animación de ganar llave y acumula una llave al jugador actual
             if(UIManager.Instance != null) UIManager.Instance.ShowKeyGainSequence(() => AddKey(currentPlayer));
@@ -301,7 +304,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            isMinotaurTurn = (diceResult == 8); // Movimiento del minotauro
+            isMinotaurTurn = (diceResult == 9); // Movimiento del minotauro
 
             Player playerToMove = currentPlayer;
             currentState = GameState.TurnPlanning;
@@ -332,12 +335,17 @@ public class GameManager : MonoBehaviour
         }
     }
     
-    // Añade una llave al jugador que recibe como parámetro
+    // Añade una llave al jugador que recibe como parámetro y le permite moverse 3 espacios
     private void AddKey(Player currentPlayer)
     {
         ExplorerPlayer explorer = currentPlayer as ExplorerPlayer;
         if(explorer != null) explorer.AddKey();
-        EndMovementState();
+
+        currentState = GameState.TurnPlanning;
+        currentPlayer.ActiveGlow(true);
+
+        if (currentPlayer.IsCPU) CPUController.Instance.StartTurn(currentPlayer, 3, isMinotaurTurn, EndMovementState);
+        else inputController.StartTurnPlanning(currentPlayer, 3, isMinotaurTurn);
     }
 
     // Secuencia para terminar el turno

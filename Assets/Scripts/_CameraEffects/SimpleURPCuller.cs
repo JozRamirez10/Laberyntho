@@ -20,8 +20,6 @@ public class SimpleURPCuller : MonoBehaviour
     public float backwardDetectionDistance = 1.0f;
     public Vector2 backwardBoxSize = new Vector2(0.5f, 0.8f); // X = Ancho, Y = Alto
 
-    [Header("Exclud Camera")]
-    public string topDownCameraName = "CM_TopDown";
     private CinemachineBrain brain;
 
     // Esta clase nos ayuda a validar si el material es configurado como shader propio
@@ -46,22 +44,14 @@ public class SimpleURPCuller : MonoBehaviour
     void OnDisable()
     {
         // Cuando CameraManager pone este script en enabled = false,
-        // restauramos inmediatamente todos los objetos a su color original.
+        // simplemente removemos el PropertyBlock para que el objeto 
+        // regrese a mostrar su material original intacto
         foreach (var kvp in originalStates)
         {
             Renderer rend = kvp.Key;
-            MaterialState state = kvp.Value;
-
             if (rend != null)
             {
-                if(state.isCustomShader && rend.material.HasProperty("_Alpha"))
-                {
-                    rend.material.SetFloat("_Alpha", state.originalAlpha);
-                }
-                else if(!state.isCustomShader && rend.material.HasProperty("_BaseColor"))
-                {
-                    rend.material.SetColor("_BaseColor", state.originalColor);    
-                }
+                rend.SetPropertyBlock(null);
             }
         }
 
@@ -74,22 +64,25 @@ public class SimpleURPCuller : MonoBehaviour
     {
         if (targetToLookAt == null) return;
 
-        bool shouldDisableCulling = false;
-        if(brain != null && brain.ActiveVirtualCamera != null)
+        bool isActiveEffect = false;
+
+        if(CameraManager.Instance != null && brain != null && brain.ActiveVirtualCamera != null)
         {
             ICinemachineCamera activeCam = brain.ActiveVirtualCamera;
             Component activeCamComponent = activeCam as Component;
 
             // Valida si el culling debería activarse
-            if(activeCamComponent != null && activeCamComponent.gameObject.name == topDownCameraName)
+            if(activeCamComponent != null 
+                && (activeCamComponent == CameraManager.Instance.vcamFaceToFace
+                    || activeCamComponent == CameraManager.Instance.vcamThirdPerson))
             {
-                shouldDisableCulling = true;
+                isActiveEffect = true;
             }
         }
 
         currentlyHitRenderers.Clear();
 
-        if (!shouldDisableCulling)
+        if (isActiveEffect)
         {
             // Detección con caja hacia atrás // Deja un espacio hacia atrás para que nigún muro bloque la vista 
             // en primera persona
@@ -128,7 +121,9 @@ public class SimpleURPCuller : MonoBehaviour
 
         if (!originalStates.ContainsKey(rend))
         {
-            Material mat = rend.material;
+            Material mat = rend.sharedMaterial;
+            if(mat == null) return;
+
             MaterialState newState = new MaterialState();
 
             if (mat.HasProperty("_Alpha"))
@@ -136,7 +131,8 @@ public class SimpleURPCuller : MonoBehaviour
                 newState.isCustomShader = true;
                 newState.originalAlpha = mat.GetFloat("_Alpha");
                 originalStates.Add(rend, newState);
-            }else if (mat.HasProperty("_BaseColor"))
+            }
+            else if (mat.HasProperty("_BaseColor"))
             {
                 newState.isCustomShader = false;
                 newState.originalColor = mat.GetColor("_BaseColor");
@@ -183,10 +179,16 @@ public class SimpleURPCuller : MonoBehaviour
             }
 
             rend.SetPropertyBlock(tempPropBlock);
+
+            if (!isHit)
+            {
+                renderersToRemove.Add(rend);
+            }
         }
 
         foreach (var rend in renderersToRemove)
         {
+            if(rend != null) rend.SetPropertyBlock(null);
             originalStates.Remove(rend);
         }
     }

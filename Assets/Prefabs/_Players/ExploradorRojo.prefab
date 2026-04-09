@@ -334,7 +334,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ExplorerPlayer
   characterName: Red
   playerColor: {r: 0.58431375, g: 0.08627451, b: 0, a: 1}
-  IsCPU: 0
+  IsCPU: 1
   iconGlowObject: {fileID: 4320116279506459578}
   groundLayer:
     serializedVersion: 2
@@ -366,4 +366,5 @@ MonoBehaviour:
   invalidMaterial: {fileID: 0}
   selectablePropertyName: _IsSelectable
   dissolvePropertyName: _DissolveAmount
+  hoveredPropertyName: _IsHovered
   growthDirection: {x: 0, y: 0}

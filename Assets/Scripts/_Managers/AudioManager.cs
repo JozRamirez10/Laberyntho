@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 
 // Configuración de audios
 public class AudioManager : MonoBehaviour
@@ -13,6 +14,10 @@ public class AudioManager : MonoBehaviour
 
     public GameSettingsSO gameSettingsSO;
 
+    private GameObject lastGlobalSelectedObject;
+    public bool ignoreNextSelectSound = false;
+    private float lastSoundPlayTime = 0f;
+
     public static AudioManager Instance;
 
     void Awake() 
@@ -24,6 +29,7 @@ public class AudioManager : MonoBehaviour
         }
         else Destroy(gameObject);
     }
+
     void OnEnable()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
@@ -32,6 +38,29 @@ public class AudioManager : MonoBehaviour
     void OnDisable()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    void Update()
+    {
+        if(EventSystem.current == null) return;
+
+        GameObject currentSelected = EventSystem.current.currentSelectedGameObject;
+
+        if(currentSelected != null && currentSelected != lastGlobalSelectedObject)
+        {
+            if(ignoreNextSelectSound) ignoreNextSelectSound = false;
+
+            else if(InputManager.Instance != null && (Time.unscaledTime - InputManager.Instance.lastSubmitTime > 0.1f))
+            {
+                if(Time.unscaledTime - lastSoundPlayTime > 0.1f)
+                {
+                    playToSelect();
+                    lastSoundPlayTime = Time.unscaledTime;
+                }
+            }
+
+            lastGlobalSelectedObject = currentSelected;
+        }
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
