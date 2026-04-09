@@ -29,12 +29,18 @@ public class GhostMovement : MonoBehaviour
 
     void Update()
     {
-        if(UIPauseManager.Instace.isPaused) return;
+        if(UIPauseManager.Instance.isPaused) return;
 
         if (mainCameraTransform == null || controller == null) return;
 
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
+        float h = 0f;
+        float v = 0f;
+
+        if(InputManager.Instance != null)
+        {
+            h = InputManager.Instance.MoveAxisX;
+            v = InputManager.Instance.MoveAxisY;
+        }
 
         Vector3 camForward = mainCameraTransform.forward;
         Vector3 camRight = mainCameraTransform.right;
